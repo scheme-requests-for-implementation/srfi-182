@@ -18,7 +18,7 @@
     ((alet-and "and" (nt ...) ((n v t) nvt ...) bd ...)
      (let ((tt v))
        (and (let ((n tt)) t)
-	    (alet-and "and" (nt ... (n tt)) (nvt ...) bd ...))))
+            (alet-and "and" (nt ... (n tt)) (nvt ...) bd ...))))
     ((alet-and "and" ((n t) ...) () bd ...)
      ((lambda (n ...) bd ...) t ...))))
 
@@ -42,14 +42,14 @@
     ((alet-rec "rec" ((n v t) ...) () bd ...)
      (let ((n '<undefined>) ...)
        (let ((t v) ...)
-	 (set! n t) ...
-	 (let () bd ...))))))
+         (set! n t) ...
+         (let () bd ...))))))
 
 (define-syntax alet-rec*
   (syntax-rules ()
     ((alet-rec* ((n v) ...) bd ...)
-     ;; (let* ((n '<undefined>) ...)	;duplication
-     (let ((n '<undefined>) ...)	;no duplication
+     ;; (let* ((n '<undefined>) ...)    ;duplication
+     (let ((n '<undefined>) ...)        ;no duplication
        (set! n v) ...
        (let () bd ...)))))
 
@@ -89,14 +89,14 @@
     ((wow-cat! z n d t ts)
      (let ((n (car z)))
        (if t
-	   (begin (set! z (cdr z)) ts)
-	   (let lp ((head (list n)) (tail (cdr z)))
-	     (if (null? tail)
-		 d
-		 (let ((n (car tail)))
-		   (if t
-		       (begin (set! z (append (reverse head) (cdr tail))) ts)
-		       (lp (cons n head) (cdr tail)))))))))
+           (begin (set! z (cdr z)) ts)
+           (let lp ((head (list n)) (tail (cdr z)))
+             (if (null? tail)
+                 d
+                 (let ((n (car tail)))
+                   (if t
+                       (begin (set! z (append (reverse head) (cdr tail))) ts)
+                       (lp (cons n head) (cdr tail)))))))))
     ((wow-cat! z n d t ts fs)
      (let ((n (car z)))
        (set! z (cdr z))
@@ -104,21 +104,21 @@
 
 (define (wow-key z k d)
   (let ((x (car z))
-	(y (cdr z)))
+        (y (cdr z)))
     (if (null? y)
-	(cons d z)
-	(if (eq? k x)
-	    y
-	    (let lp ((head (list x (car y))) (tail (cdr y)))
-	      (if (null? tail)
-		  (cons d z)
-		  (let ((x (car tail))
-			(y (cdr tail)))
-		    (if (null? y)
-			(cons d z)
-			(if (eq? k x)
-			    (cons (car y) (append head (cdr y)))
-			    (lp (cons x (cons (car y) head)) (cdr y)))))))))))
+        (cons d z)
+        (if (eq? k x)
+            y
+            (let lp ((head (list x (car y))) (tail (cdr y)))
+              (if (null? tail)
+                  (cons d z)
+                  (let ((x (car tail))
+                        (y (cdr tail)))
+                    (if (null? y)
+                        (cons d z)
+                        (if (eq? k x)
+                            (cons (car y) (append head (cdr y)))
+                            (lp (cons x (cons (car y) head)) (cdr y)))))))))))
 (define-syntax wow-key!
   (syntax-rules ()
     ((wow-key! z m (n k) d)
@@ -126,39 +126,39 @@
     ((wow-key! z 2 (n k f) d)
      ;; two in a time: k1 1 k2 2 (k3 3) k4 4 k5 5 -> k2 2 k1 1 k4 4 k5 5
      (let ((x (car z))
-     	   (y (cdr z)))
+           (y (cdr z)))
        (if (null? y)
-     	   d
-     	   (if (f k x)
-     	       (begin (set! z (cdr y)) (car y))
-     	       (let lp ((head (list x (car y))) (tail (cdr y)))
-     		 (if (null? tail)
-     		     d
-     		     (let ((x (car tail))
-     			   (y (cdr tail)))
-     		       (if (null? y)
-     			   d
-     			   (if (f k x)
-     			       (begin (set! z (append head (cdr y)))
-     				      (car y))
-     			       (lp (cons x (cons (car y) head)) (cdr y)))))))))))
+           d
+           (if (f k x)
+               (begin (set! z (cdr y)) (car y))
+               (let lp ((head (list x (car y))) (tail (cdr y)))
+                 (if (null? tail)
+                     d
+                     (let ((x (car tail))
+                           (y (cdr tail)))
+                       (if (null? y)
+                           d
+                           (if (f k x)
+                               (begin (set! z (append head (cdr y)))
+                                      (car y))
+                               (lp (cons x (cons (car y) head)) (cdr y)))))))))))
     ((wow-key! z 1 (n k f) d)
      ;; one in a time: 1 2 3 4 (5 6) 7 8 -> 1 2 3 4 7 8
      (let ((x (car z))
-     	   (y (cdr z)))
+           (y (cdr z)))
        (if (null? y)
-     	   d
-     	   (if (f k x)
-     	       (begin (set! z (cdr y)) (car y))
-     	       (let lp ((head (list x)) (tail y))
-     		 (let ((x (car tail))
-     		       (y (cdr tail)))
-     		   (if (null? y)
-     		       d
-     		       (if (f k x)
-     			   (begin (set! z (append (reverse head) (cdr y)))
-     				  (car y))
-     			   (lp (cons x head) y)))))))))
+           d
+           (if (f k x)
+               (begin (set! z (cdr y)) (car y))
+               (let lp ((head (list x)) (tail y))
+                 (let ((x (car tail))
+                       (y (cdr tail)))
+                   (if (null? y)
+                       d
+                       (if (f k x)
+                           (begin (set! z (append (reverse head) (cdr y)))
+                                  (car y))
+                           (lp (cons x head) y)))))))))
     ((wow-key! z m (n k) d t)
      (wow-key! z m (n k eq?) d t n))
     ((wow-key! z m (n k f) d t)
@@ -172,45 +172,45 @@
     ((wow-key! z 2 (n k f) d t ts fs)
      ;; two in a time: k1 1 k2 2 (k3 3) k4 4 k5 5 -> k2 2 k1 1 k4 4 k5 5
      (let ((x (car z))
-     	   (y (cdr z)))
+           (y (cdr z)))
        (if (null? y)
-     	   d
-     	   (if (f k x)
-     	       (let ((n (car y)))
-     		 (set! z (cdr y))
-     		 (if t ts fs))
-     	       (let lp ((head (list x (car y))) (tail (cdr y)))
-     		 (if (null? tail)
-     		     d
-     		     (let ((x (car tail))
-     			   (y (cdr tail)))
-     		       (if (null? y)
-     			   d
-     			   (if (f k x)
-     			       (let ((n (car y)))
-     				 (set! z (append head (cdr y)))
-     				 (if t ts fs))
-     			       (lp (cons x (cons (car y) head)) (cdr y)))))))))))
+           d
+           (if (f k x)
+               (let ((n (car y)))
+                 (set! z (cdr y))
+                 (if t ts fs))
+               (let lp ((head (list x (car y))) (tail (cdr y)))
+                 (if (null? tail)
+                     d
+                     (let ((x (car tail))
+                           (y (cdr tail)))
+                       (if (null? y)
+                           d
+                           (if (f k x)
+                               (let ((n (car y)))
+                                 (set! z (append head (cdr y)))
+                                 (if t ts fs))
+                               (lp (cons x (cons (car y) head)) (cdr y)))))))))))
     ((wow-key! z 1 (n k f) d t ts fs)
      ;; one in a time: 1 2 3 4 (5 6) 7 8 -> 1 2 3 4 7 8
      (let ((x (car z))
-     	   (y (cdr z)))
+           (y (cdr z)))
        (if (null? y)
-     	   d
-     	   (if (f k x)
-     	       (let ((n (car y)))
-     		 (set! z (cdr y))
-     		 (if t ts fs))
-     	       (let lp ((head (list x)) (tail y))
-     		 (let ((x (car tail))
-     		       (y (cdr tail)))
-     		   (if (null? y)
-     		       d
-     		       (if (f k x)
-     			   (let ((n (car y)))
-     			     (set! z (append (reverse head) (cdr y)))
-     			     (if t ts fs))
-     			   (lp (cons x head) y)))))))))))
+           d
+           (if (f k x)
+               (let ((n (car y)))
+                 (set! z (cdr y))
+                 (if t ts fs))
+               (let lp ((head (list x)) (tail y))
+                 (let ((x (car tail))
+                       (y (cdr tail)))
+                   (if (null? y)
+                       d
+                       (if (f k x)
+                           (let ((n (car y)))
+                             (set! z (append (reverse head) (cdr y)))
+                             (if t ts fs))
+                           (lp (cons x head) y)))))))))))
 
 (define-syntax %alet
   (syntax-rules (adbmal values cons rec and opt quote quasiquote unquote)
@@ -218,11 +218,11 @@
      ((lambda (n ...) bd ...) v ...))
     ((%alet (var) ((n v) ...) () bd ...)
      ((letrec ((var (lambda (n ...) bd ...)))
-	var) v ...))
+        var) v ...))
     ((%alet (var (p ...) (nv ...) (bn ...)) ((n v) ...) () bd ...)
      ((letrec ((t (lambda (v ...)
-		    (%alet (p ...) (nv ... (n v) ... (var t)) (bn ...) bd ...))))
-	t) v ...))
+                    (%alet (p ...) (nv ... (n v) ... (var t)) (bn ...) bd ...))))
+        t) v ...))
 
     ((%alet (p ...) (nv ...) (((a) b) bn ...) bd ...)
      ((lambda (t) (%alet (p ...) (nv ... (a t)) (bn ...) bd ...)) b))
@@ -232,7 +232,7 @@
     ((%alet (p ...) (nv ...) (((values . b) c) bn ...) bd ...)
      (%alet "one" (p ...) (nv ...) (values) (b c) (bn ...) bd ...))
     ((%alet (p ...) (nv ...) (((cons a b) c) bn ...) bd ...)
-     (let ((z c))			;should be exist!
+     (let ((z c))                       ;should be exist!
        ((lambda (ta tb) (%alet (p ...) (nv ... (a ta) (b tb)) (bn ...) bd ...)) (car z) (cdr z))))
     ((%alet (p ...) (nv ...) (((a . b) c) bn ...) bd ...)
      (%alet "one" (p ...) (nv ... (a t)) (t) (b c) (bn ...) bd ...))
@@ -263,7 +263,7 @@
      ((lambda (t ...) (%alet (p ...) (nv ...) (bn ...) bd ...)) c d ...))
     ((%alet "dot" (p ...) (nv ...) (t ...) (b c d ...) (bn ...) bd ...)
      ((lambda (t ... . tn)
-	(%alet (p ...) (nv ... (b tn)) (bn ...) bd ...)) c d ...))
+        (%alet (p ...) (nv ... (b tn)) (bn ...) bd ...)) c d ...))
 
     ((%alet (p ...) (nv ...) ((and (n v t ...) nvt ...) bn ...) bd ...)
      (%alet "and" (p ...) (nv ...) ((n v t ...) nvt ...) (bn ...) bd ...))
@@ -273,7 +273,7 @@
     ((%alet "and" (p ...) (nv ...) ((n v t) nvt ...) (bn ...) bd ...)
      (let ((tt v))
        (and (let ((n tt)) t)
-	    (%alet "and" (p ...) (nv ... (n tt)) (nvt ...) (bn ...) bd ...))))
+            (%alet "and" (p ...) (nv ... (n tt)) (nvt ...) (bn ...) bd ...))))
     ((%alet "and" (p ...) (nv ...) () (bn ...) bd ...)
      (%alet (p ...) (nv ...) (bn ...) bd ...))
 
@@ -308,8 +308,8 @@
        (%alet "opt" (p ...) (nv ... (n v)) z e (bn ...) bd ...)))
     ((%alet "opt" (p ...) (nv ...) z (((n k) d) . e) (bn ...) bd ...)
      (let* ((z (if (null? z) (cons d z) (wow-key z k d)))
-	    (t (car z))
-	    (z (cdr z)))
+            (t (car z))
+            (z (cdr z)))
        (%alet "opt" (p ...) (nv ... (n t)) z e (bn ...) bd ...)))
     ((%alet "opt" (p ...) (nv ...) z ('n . e) (bn ...) bd ...)
      (let ((v (if (null? z) #f (wow-key! z 2 (n 'n eq?) #f))))
@@ -322,20 +322,20 @@
        (%alet "opt" (p ...) (nv ... (n v)) z e (bn ...) bd ...)))
     ((%alet "opt" (p ...) (nv ...) z ((n d) . e) (bn ...) bd ...)
      (let ((y (if (null? z) z (cdr z)))
-	   (v (if (null? z) d (car z))))
+           (v (if (null? z) d (car z))))
        (%alet "opt" (p ...) (nv ... (n v)) y e (bn ...) bd ...)))
     ((%alet "opt" (p ...) (nv ...) z ((n d t ...) . e) (bn ...) bd ...)
      (let ((y (if (null? z) z (cdr z)))
-	   (v (if (null? z) d (wow-opt n (car z) t ...))))
+           (v (if (null? z) d (wow-opt n (car z) t ...))))
        (%alet "opt" (p ...) (nv ... (n v)) y e (bn ...) bd ...)))
     ((%alet "opt" (p ...) (nv ...) z (n . e) (bn ...) bd ...)
      (let ((y (if (null? z) z (cdr z)))
-	   (v (if (null? z) #f (car z))))
+           (v (if (null? z) #f (car z))))
        (%alet "opt" (p ...) (nv ... (n v)) y e (bn ...) bd ...)))
     ((%alet "opt" (p ...) (nv ...) z () (bn ...) bd ...)
      (if (null? z)
-	 (%alet (p ...) (nv ...) (bn ...) bd ...)
-	 (error 'alet* "too many arguments" z)))
+         (%alet (p ...) (nv ...) (bn ...) bd ...)
+         (error 'alet* "too many arguments" z)))
     ((%alet "opt" (p ...) (nv ...) z e (bn ...) bd ...)
      (let ((v z))
        (%alet (p ...) (nv ... (e v)) (bn ...) bd ...)))
@@ -345,7 +345,7 @@
     ((%alet (p ...) (nv ...) ((values a b c ...) bn ...) bd ...)
      (%alet "not" (p ...) (nv ... (a t)) (values t) (b c ...) (bn ...) bd ...))
     ((%alet (p ...) (nv ...) ((cons a b c) bn ...) bd ...)
-     (let ((z c))			;should be exist!
+     (let ((z c))                       ;should be exist!
        ((lambda (ta tb) (%alet (p ...) (nv ... (a ta) (b tb)) (bn ...) bd ...)) (car z) (cdr z))))
     ((%alet (p ...) (nv ...) ((a b c ...) bn ...) bd ...)
      (%alet "not" (p ...) (nv ... (a t)) (t) (b c ...) (bn ...) bd ...))
@@ -367,7 +367,7 @@
     ((%alet (p ...) (nv ...) (a bn ...) bd ...)
      (%alet "rot" (p ...) (nv ...) () a (bn ...) bd ...))
     ((%alet "rot" (p ...) (nv ...) (new-bn ...) (a . b) (bn ...) bd ...)
-     (%alet "rot" (p ...) (nv ...) (new-bn ... a) b (bn ...) bd ...)) 
+     (%alet "rot" (p ...) (nv ...) (new-bn ... a) b (bn ...) bd ...))
     ((%alet "rot" (p ...) (nv ...) (new-bn ...) b (bn ...) bd ...)
      (%alet (b (p ...) (nv ...) (bn ...)) () (new-bn ...) bd ...))))
 
@@ -384,11 +384,11 @@
      ((lambda () bd ...)))
     ((%alet* (var) (n ...) () bd ...)
      ((letrec ((var (lambda* (n ...) bd ...))) ;for duplication
-	var) n ...))
+        var) n ...))
     ((%alet* (var (p ...) (nn ...) (bn ...)) (n ...) () bd ...)
-     ((letrec ((var (lambda* (n ...)	;for duplication
-		      (%alet* (p ...) (nn ... n ... var) (bn ...) bd ...))))
-	var) n ...))
+     ((letrec ((var (lambda* (n ...)    ;for duplication
+                      (%alet* (p ...) (nn ... n ... var) (bn ...) bd ...))))
+        var) n ...))
 
     ((%alet* (p ...) (n ...) (((a) b) bn ...) bd ...)
      ((lambda (a) (%alet* (p ...) (n ... a) (bn ...) bd ...)) b))
@@ -398,7 +398,7 @@
     ((%alet* (p ...) (n ...) (((values . b) c) bn ...) bd ...)
      (%alet* "one" (p ...) (n ...) (values) (b c) (bn ...) bd ...))
     ((%alet* (p ...) (n ...) (((cons a b) c) bn ...) bd ...)
-     (let ((z c))			;should be exist!
+     (let ((z c))                       ;should be exist!
        ((lambda (a b) (%alet* (p ...) (n ... a b) (bn ...) bd ...)) (car z) (cdr z))))
     ((%alet* (p ...) (n ...) (((a . b) c) bn ...) bd ...)
      (%alet* "one" (p ...) (n ... a) (a) (b c) (bn ...) bd ...))
@@ -429,10 +429,10 @@
      ((lambda (r ...) (%alet* (p ...) (n ...) (bn ...) bd ...)) c d ...))
     ((%alet* "dot" (p ...) (n ...) (r ...) (b c d ...) (bn ...) bd ...)
      ((lambda (r ... . b) (%alet* (p ...) (n ... b) (bn ...) bd ...)) c d ...))
-    
+
     ((%alet* (p ...) (n ...) ((and (n1 v1 t1 ...) (n2 v2 t2 ...) ...) bn ...) bd ...)
      (alet-and* ((n1 v1 t1 ...) (n2 v2 t2 ...) ...)
-		(%alet* (p ...) (n ... n1 n2 ...) (bn ...) bd ...)))
+                (%alet* (p ...) (n ... n1 n2 ...) (bn ...) bd ...)))
 
     ((%alet* (p ...) (n ...) ((rec (n1 v1) (n2 v2) ...) bn ...) bd ...)
      (letrec* ((n1 v1) (n2 v2) ...)
@@ -461,8 +461,8 @@
        (%alet* "opt" (p ...) (m ... n) z e (bn ...) bd ...)))
     ((%alet* "opt" (p ...) (m ...) z (((n k) d) . e) (bn ...) bd ...)
      (let* ((z (if (null? z) (cons d z) (wow-key z k d)))
-	    (n (car z))
-	    (z (cdr z)))
+            (n (car z))
+            (z (cdr z)))
        (%alet* "opt" (p ...) (m ... n) z e (bn ...) bd ...)))
     ((%alet* "opt" (p ...) (m ...) z ('n . e) (bn ...) bd ...)
      (let ((n (if (null? z) #f (wow-key! z 2 (n 'n eq?) #f))))
@@ -475,20 +475,20 @@
        (%alet* "opt" (p ...) (m ... n) z e (bn ...) bd ...)))
     ((%alet* "opt" (p ...) (m ...) z ((n d) . e) (bn ...) bd ...)
      (let ((y (if (null? z) z (cdr z)))
-	   (n (if (null? z) d (car z))))
+           (n (if (null? z) d (car z))))
        (%alet* "opt" (p ...) (m ... n) y e (bn ...) bd ...)))
     ((%alet* "opt" (p ...) (m ...) z ((n d t ...) . e) (bn ...) bd ...)
      (let ((y (if (null? z) z (cdr z)))
-	   (n (if (null? z) d (wow-opt n (car z) t ...))))
+           (n (if (null? z) d (wow-opt n (car z) t ...))))
        (%alet* "opt" (p ...) (m ... n) y e (bn ...) bd ...)))
     ((%alet* "opt" (p ...) (m ...) z (n . e) (bn ...) bd ...)
      (let ((y (if (null? z) z (cdr z)))
-	   (n (if (null? z) #f (car z))))
+           (n (if (null? z) #f (car z))))
        (%alet* "opt" (p ...) (m ... n) y e (bn ...) bd ...)))
     ((%alet* "opt" (p ...) (m ...) z () (bn ...) bd ...)
      (if (null? z)
-	 (%alet* (p ...) (m ...) (bn ...) bd ...)
-	 (error 'alet* "too many arguments" z)))
+         (%alet* (p ...) (m ...) (bn ...) bd ...)
+         (error 'alet* "too many arguments" z)))
     ((%alet* "opt" (p ...) (m ...) z e (bn ...) bd ...)
      (let ((e z))
        (%alet* (p ...) (m ... e) (bn ...) bd ...)))
@@ -498,7 +498,7 @@
     ((%alet* (p ...) (n ...) ((values a b c ...) bn ...) bd ...)
      (%alet* "not" (p ...) (n ... a) (values a) (b c ...) (bn ...) bd ...))
     ((%alet* (p ...) (n ...) ((cons a b c) bn ...) bd ...)
-     (let ((z c))			;should be exist!
+     (let ((z c))                       ;should be exist!
        ((lambda (a b) (%alet* (p ...) (n ... a b) (bn ...) bd ...)) (car z) (cdr z))))
     ((%alet* (p ...) (n ...) ((a b c ...) bn ...) bd ...)
      (%alet* "not" (p ...) (n ... a) (a) (b c ...) (bn ...) bd ...))
@@ -520,7 +520,7 @@
     ((%alet* (p ...) (n ...) (a bn ...) bd ...)
      (%alet* "rot" (p ...) (n ...) () a (bn ...) bd ...))
     ((%alet* "rot" (p ...) (n ...) (new-bn ...) (a . b) (bn ...) bd ...)
-     (%alet* "rot" (p ...) (n ...) (new-bn ... a) b (bn ...) bd ...)) 
+     (%alet* "rot" (p ...) (n ...) (new-bn ... a) b (bn ...) bd ...))
     ((%alet* "rot" (p ...) (n ...) (new-bn ...) b (bn ...) bd ...)
      (%alet* (b (p ...) (n ...) (bn ...)) () (new-bn ...) bd ...))))
 
