@@ -36,26 +36,9 @@ Joo ChurlSoo
   <li>Draft #1 published: 2020/2/22</li>
 </ul>
 
-<h2>Changes from SRFI 86</h2>
-
-<p>This SRFI is based on <a href="https://srfi.schemers.org/srfi-86/">SRFI 86</a>.
-  The ALET and ALET* macros of this revised one are extended and
-  changed in following aspects compared with those of the old one:</p>
-<ol>
-  <li>The MU and NU macros are renamed to ADBMAL and ADBMALS.</li>
-  <li>ADBMAL*, their procedural equivalent, is added.</li>
-  <li>In addition to VALUES &amp; ADBMAL, multiple bindings for LIST &amp; CONS are added.</li>
-  <li>The binding syntax of ADBMAL is changed to that of VALUES.</li>
-  <li>The thunk form of `iterative function' is changed from `(() . lp)' to `lp'.</li>
-  <li>The ALET* does NOT use LAMBDA*; that permits duplications of variables.</li>
-  <li>The `rec' bindings of ALET* do not permit duplications of variables.</li>
-  <li>An awkward form, <code>(() expression1 expression2 ...)</code>, is removed.</li>
-  <li>The `opt', `key', and `cat' forms are integrated into `opt'.</li></ol>
-
-</pre>
 <h1>Abstract</h1>
 
-<p>Unlike the VALUES and CALL-WITH-VALUES mechanism of R5RS, this one
+<p>Unlike the VALUES and CALL-WITH-VALUES mechanism of R5RS, this SRFI
 uses an explicit representation for multiple return values as a single
 value, namely a procedure.  Decomposition of multiple values is done
 by simple application.  The macro, ADBMAL, evaluates to a procedure
@@ -76,6 +59,24 @@ handle multiple values, and new binding forms for list, cons, and
 other multiple values.  In addition, they have several new binding
 forms for useful functions such as escape, iteration, optional
 arguments, etc.</p>
+
+<h1>Changes from SRFI 86</h1>
+
+<p>This SRFI is based on <a href="https://srfi.schemers.org/srfi-86/">SRFI 86</a>.
+  The ALET and ALET* macros of this revised one are extended and
+  changed in following aspects compared with those of the old one:</p>
+<ol>
+  <li>The MU and NU macros are renamed to ADBMAL and ADBMALS.</li>
+  <li>ADBMAL*, their procedural equivalent, is added.</li>
+  <li>In addition to VALUES &amp; ADBMAL, multiple bindings for LIST &amp; CONS are added.</li>
+  <li>The binding syntax of ADBMAL is changed to that of VALUES.</li>
+  <li>The thunk form of `iterative function' is changed from `(() . lp)' to `lp'.</li>
+  <li>The ALET* does NOT use LAMBDA*; that permits duplications of variables.</li>
+  <li>The `rec' bindings of ALET* do not permit duplications of variables.</li>
+  <li>An awkward form, <code>(() expression1 expression2 ...)</code>, is removed.</li>
+  <li>The `opt', `key', and `cat' forms are integrated into `opt'.</li></ol>
+
+</pre>
 
 <h1>Rationale</h1>
 
