@@ -42,15 +42,15 @@ Joo ChurlSoo
   The ALET and ALET* macros of this revised one are extended and
   changed in following aspects compared with those of the old one:</p>
 <ol>
-  <li>The MU and NU are changed to the ADBMAL and ADBMALS.</li>
-  <li>The ADBMAL*, their procedural equivalent is added.</li>
+  <li>The MU and NU macros are renamed to ADBMAL and ADBMALS.</li>
+  <li>ADBMAL*, their procedural equivalent, is added.</li>
   <li>In addition to VALUES &amp; ADBMAL, multiple bindings for LIST &amp; CONS are added.</li>
-  <li>The binding syntax of ADBMAL is changed as that of VALUES.</li>
+  <li>The binding syntax of ADBMAL is changed to that of VALUES.</li>
   <li>The thunk form of `iterative function' is changed from `(() . lp)' to `lp'.</li>
-  <li>The ALET* do NOT use LAMBDA* that permits duplications of variables.</li>
+  <li>The ALET* does NOT use LAMBDA*; that permits duplications of variables.</li>
   <li>The `rec' bindings of ALET* do not permit duplications of variables.</li>
-  <li>An awkward form, (() expression1 expression2 ...) is removed.</li>
-  <li>The `opt', `key', and `cat' are integrated into `opt'.</li></ol>
+  <li>An awkward form, <code>(() expression1 expression2 ...)</code>, is removed.</li>
+  <li>The `opt', `key', and `cat' forms are integrated into `opt'.</li></ol>
 
 </pre>
 <h1>Abstract</h1>
@@ -59,31 +59,33 @@ Joo ChurlSoo
 uses an explicit representation for multiple return values as a single
 value, namely a procedure.  Decomposition of multiple values is done
 by simple application.  The macro, ADBMAL, evaluates to a procedure
-that takes one procedure argument.  The ADBMAL can be compared with
-LAMBDA.  While LAMBDA expression that consists of &lt;formals&gt; and
-&lt;body&gt; requires some actual arguments later when the evaluated
-LAMBDA expression is called, ADBMAL expression that consists of
-&lt;expression&gt;s corresponding to actual arguments of LAMBDA
-requires &lt;formals&gt; and &lt;body&gt;, that is, an evaluated
-LAMBDA expression, later when the evaluated ADBMAL expression is
-called.</p>
+that takes one procedure argument.  The ADBMAL macro can be compared
+with LAMBDA.  While a LAMBDA expression that consists of
+&lt;formals&gt; and &lt;body&gt; requires some actual arguments later
+when the evaluated LAMBDA expression is called, an ADBMAL expression
+that consists of &lt;expression&gt;s corresponding to actual arguments
+of LAMBDA requires &lt;formals&gt; and &lt;body&gt;, that is, an
+evaluated LAMBDA expression, later when the evaluated ADBMAL
+expression is called.</p>
 
-<p>This one also introduces new LET-syntax depending on ADBMAL to
-manipulate multiple values, ALET and ALET* that are compatible with
-LET and LET* of R5RS in single value bindings.  They also have a
-binding form making use of VALUES and CALL-WITH-VALUES to handle
-multiple values, and new binding forms for list, cons, and other
-multiple values.  In addition, they have several new binding forms for
-useful functions such as escape, iteration, optional arguments, etc.</p>
+<p>This SRFI also introduces the new LET-syntax ALET and ALET*, which
+depend on ADBMAL to manipulate multiple values, and which are
+compatible with LET and LET* of R5RS in single-value bindings.  They
+also have a binding form making use of VALUES and CALL-WITH-VALUES to
+handle multiple values, and new binding forms for list, cons, and
+other multiple values.  In addition, they have several new binding
+forms for useful functions such as escape, iteration, optional
+arguments, etc.</p>
 
 <h1>Rationale</h1>
 
-<p>It is impossible to bind the evaluated result of VALUES expression to a single
-variable unlike other Scheme expressions.  Moreover, the pair of VALUES and
-CALL-WITH-VALUES was clumsy to use and somewhat slow under some circumstances.
-A solution would be to enclose the arguments of VALUES expression in a
-procedure of one argument, a consumer procedure of CALL-WITH-VALUS.  The
-  following are examples to show the differences.</p>
+<p>It is impossible to bind the evaluated result of VALUES expression
+to a single variable unlike other Scheme expressions.  Moreover, the
+pair of VALUES and CALL-WITH-VALUES was clumsy to use and somewhat
+slow under some circumstances.  A solution would be to enclose the
+arguments of a VALUES expression in a procedure of one argument, a
+consumer procedure of CALL-WITH-VALUES.  The following are examples to
+show the differences.</p>
 
 <pre>
 (define ls (list 20 30))		    =&gt; (list 20 30)
@@ -102,14 +104,16 @@ procedure of one argument, a consumer procedure of CALL-WITH-VALUS.  The
 (n list)			=&gt; (10 20 30)
 </pre>
 
-The ALET and ALET* are cases in point to use ADBMAL.  The differences between
-this LET-syntax and others, and some additional functions are best explained
-by simple examples. In fact, the main purpose for this SRFI is to rearrange or
-rebuild the ALET and ALET* of SRFI 86.
+The ALET and ALET* macros are examples of the use of ADBMAL.  The
+differences between this LET-syntax and others, and some additional
+functions, are best explained by simple examples. In fact, the main
+purpose for this SRFI is to rearrange or rebuild the ALET and ALET*
+macros of SRFI 86.
 
 <ol>
-  <li><p>The expressions for ALET bindings are evaluated in sequence from left to
-    right unlike LET of R5RS, R6RS, and SRFI 71.</p>
+  <li><p>The expressions for ALET bindings are evaluated in sequence
+    from left to right, unlike LET of R5RS, R6RS, and <a
+    href="https://srfi.schemers.org/srfi-71/">SRFI 71</a>.</p>
 
     <p>In SRFI 71:</p>
     <pre>
@@ -121,7 +125,7 @@ rebuild the ALET and ALET* of SRFI 86.
 =&gt; 2nd4th1st3rd(1 2 3 4 5 (6))
     </pre>
 
-    <p>In this one:</p>
+    <p>In this SRFI:</p>
     <pre>
 (alet ((a (begin (display &quot;1st&quot;) 1))
        (values b c (values (begin (display &quot;2nd&quot;) 2) 3))
@@ -133,7 +137,7 @@ rebuild the ALET and ALET* of SRFI 86.
   </li>
 
   <li><p>They have a binding form that uses CALL-WITH-VALUES and VALUES to handle
-    multiple values with a syntactic keyword `values' like SRFI 71.</p>
+    multiple values with a syntactic keyword `values' as in SRFI 71.</p>
 
     <pre>
 (define mal (adbmal 1 2))
@@ -152,7 +156,7 @@ rebuild the ALET and ALET* of SRFI 86.
 
   <li><p>They have binding forms that use LIST and CONS to handle multiple values.
    The bindings that require multiple values can take multiple expressions, if
-   syntactically possible, as well as a single expression that produce
+   syntactically possible, as well as a single expression that produces
     multiple values.</p>
     <pre>
 (define ls (list 3 4 5))
@@ -178,7 +182,7 @@ rebuild the ALET and ALET* of SRFI 86.
 	  (if (&lt; a 10) (tag 10 b c d e) (list a b c d e)))
 =&gt; '(10 2 3 4 5)
     </pre>
-    <p>In this one:</p>
+    <p>In this SRFI:</p>
     <pre>
 (define cs (cons 1 2))
 (define ls (list 3 4 5))
@@ -193,8 +197,8 @@ rebuild the ALET and ALET* of SRFI 86.
 =&gt; '(10 2 1 (2) 10)
     </pre></li>
 
-  <li><p>They have a new binding form that has a iterative function like named-ALET.
-    It is also allowed to take multiple values bindings.</p>
+  <li><p>They have a new binding form that has an iterative function like named-ALET.
+    It is also allowed to take multiple-valued bindings.</p>
     <pre>
 (define cs (cons 1 2))
 (define ls (list 3 4 5))
@@ -389,33 +393,41 @@ value of &lt;test&gt; is false, it stops and returns #f.</p></li>
 			  | equal?
   </pre>
   <p>The &lt;optional sequent variable&gt; is bound to the first one of the remaining
-    elements of &lt;rest list&gt;.  If there is no more element, it is bound to the
+    elements of &lt;rest list&gt;.  If there are no more elements, it is bound to the
     &lt;default&gt;.</p>
-  <p>The &lt;optional unnamed variable&gt; is temporarily bound to each of remaining
-    elements of &lt;rest list&gt; sequentially, until &lt;test&gt; returns a true value, then
-    it is finally bound to the passed element.  If there is no &lt;test&gt;, the first
-    one of the remaining elements of &lt;rest list&gt; is regarded as passing.  If any
-    element does not pass the &lt;test&gt;, it is bound to the &lt;default&gt;.  If there is a
-    &lt;false substitute&gt; and &lt;test&gt; returns a false value, it is finally bound to
-    the &lt;false substitute&gt; instead of the above process.  If there is a &lt;true
-    substitute&gt; and &lt;test&gt; returns a true value, it is finally bound to the &lt;true
-    substitute&gt;.</p>
+  <p>The &lt;optional unnamed variable&gt; is temporarily bound to
+    each of remaining elements of &lt;rest list&gt; sequentially until
+    &lt;test&gt; returns a true value, at which point it is finally
+    bound to the passed element.  If there is no &lt;test&gt;, the
+    first one of the remaining elements of &lt;rest list&gt; is
+    regarded as passing.  If any element does not pass the
+    &lt;test&gt;, it is bound to the &lt;default&gt;.  If there is a
+    &lt;false substitute&gt; and &lt;test&gt; returns a false value,
+    it is finally bound to the &lt;false substitute&gt; instead of the
+    above process.  If there is a &lt;true substitute&gt; and
+    &lt;test&gt; returns a true value, it is finally bound to the
+    &lt;true substitute&gt;.</p>
 
-  <p>The keyword used for the corresponding &lt;optional keyword variable&gt; is a symbol
-    of the same name as the &lt;var&gt; or &lt;keyword&gt;.  The remaining elements are
-    interpreted one by one(quote symbol) or two in a time(quasiquote symbol)
-    until an element is the keyword, then the variable is bound to the next
-    element.  If there is no keyword or the keyword is the last element, the
-    variable is bound to the &lt;default&gt;.  The following are applied to &lt;optional
-    sequent variable&gt; and &lt;optional keyword variable&gt;: If there is a &lt;test&gt;, it is
-    evaluated only when &lt;var&gt; is bound to an element of &lt;rest list&gt;.  If it
-    returns a false value and there is no &lt;false substitute&gt;, an error is
-    signaled.  If it returns a false value and there is a &lt;false substitute&gt;,
-    &lt;var&gt; is rebound to the &lt;false substitute&gt; instead of signaling an error.  If
-    it returns a true value and there is a &lt;true substitute&gt;, &lt;var&gt; is rebound to
-    the &lt;true substitute&gt;.  When there are more elements than ones that are
-    specified by &lt;var&gt;s, an error is signaled.  But if &lt;rest var&gt; is given, it is
-    bound to the remaining elements.</p></li></ul>
+  <p>The keyword used for the corresponding &lt;optional keyword
+    variable&gt; is a symbol of the same name as the &lt;var&gt; or
+    &lt;keyword&gt;.  The remaining elements are interpreted one by
+    one (quote symbol) or two in a time (quasiquote symbol) until an
+    element is the keyword, at which point the variable is bound to
+    the next element.  If there is no keyword or the keyword is the
+    last element, the variable is bound to the &lt;default&gt;.</p>
+
+  <p>The following rules are applied to &lt;optional sequent
+    variable&gt; and &lt;optional keyword variable&gt;: If there is a
+    &lt;test&gt;, it is evaluated only when &lt;var&gt; is bound to an
+    element of &lt;rest list&gt;.  If it returns a false value and
+    there is no &lt;false substitute&gt;, an error is signaled.  If it
+    returns a false value and there is a &lt;false substitute&gt;,
+    &lt;var&gt; is rebound to the &lt;false substitute&gt; instead of
+    signaling an error.  If it returns a true value and there is a
+    &lt;true substitute&gt;, &lt;var&gt; is rebound to the &lt;true
+    substitute&gt;.  When there are more elements than ones that are
+    specified by &lt;var&gt;s, an error is signaled.  But if &lt;rest
+    var&gt; is given, it is bound to the remaining elements.</p></li></ul>
 
   <pre>(alet  name (&lt;binding spec&gt; ...) body)
 (alet* name (&lt;binding spec&gt; ...) body)</pre>
@@ -431,14 +443,14 @@ available both in the <a href="https://github.com/scheme-requests-for-implementa
 
 <h1>References</h1>
 <table class="references">
-<tr><td>[R5RS]</td><td>Richard Kelsey, William Clinger, and Jonathan Rees: Revised(5) Report on the Algorithmic Language Scheme <a href="http://www.schemers.org/Documents/Standards/R5RS/" class="eponymous">http://www.schemers.org/Documents/Standards/R5RS/</a></td></tr>
-<tr><td>[R6RS]</td><td>Michael Sperber, R. Kent Dybvig, Matthew Flatt, and Anton von Straaten: Revised(6) Report on the Algorithmic Language Scheme <a href class="eponymous"="http://www.r6rs.org">http://www.r6rs.org</a></td></tr>
+<tr><td>[R5RS]</td><td>Richard Kelsey, William Clinger, and Jonathan Rees: Revised(5) Report on the Algorithmic Language Scheme.<a href="http://www.schemers.org/Documents/Standards/R5RS/" class="eponymous">http://www.schemers.org/Documents/Standards/R5RS/</a></td></tr>
+<tr><td>[R6RS]</td><td>Michael Sperber, R. Kent Dybvig, Matthew Flatt, and Anton von Straaten: Revised(6) Report on the Algorithmic Language Scheme.<a href class="eponymous"="http://www.r6rs.org">http://www.r6rs.org</a></td></tr>
 <tr><td>[SRFI 2]</td><td>Oleg Kiselyov: AND-LET*: and AND with local bindings, a guarded LET* special form. <a href class="eponymous"="https://srfi.schemers.org/srfi-2/">https://srfi.schemers.org/srfi-2/</a></td></tr>
-<tr><td>[SRFI 11]</td><td>Lars T. Hansen: Syntax for receiving multipl values. <a href class="eponymous"="https://srfi.schemers.org/srfi-11/">https://srfi.schemers.org/srfi-11/</a></td></tr>
+<tr><td>[SRFI 11]</td><td>Lars T. Hansen: Syntax for receiving multiple values. <a href class="eponymous"="https://srfi.schemers.org/srfi-11/">https://srfi.schemers.org/srfi-11/</a></td></tr>
 <tr><td>[SRFI 51]</td><td>Joo ChurlSoo: Handling rest list. <a href class="eponymous"="https://srfi.schemers.org/srfi-51/">https://srfi.schemers.org/srfi-51/</a></td></tr>
 <tr><td>[SRFI 54]</td><td>Joo ChurlSoo: Formatting. <a href class="eponymous"="https://srfi.schemers.org/srfi-54/">https://srfi.schemers.org/srfi-54/</a></td></tr>
 <tr><td>[SRFI 71]</td><td>Sebastian Egner: Extended LET-syntax for multiple values. <a href class="eponymous"="https://srfi.schemers.org/srfi-71/">https://srfi.schemers.org/srfi-71/</a></td></tr>
-<tr><td>[SRFI 86]</td><td>Joo ChurlSoo: MU and NU simulating VALUES &amp; CALL-WITH-VALUES, and their related LET-syntax <a href class="eponymous"="https://srfi.schemers.org/srfi-86/">https://srfi.schemers.org/srfi-86/</a></td></tr></table>
+<tr><td>[SRFI 86]</td><td>Joo ChurlSoo: MU and NU simulating VALUES &amp; CALL-WITH-VALUES, and their related LET-syntax.<a href class="eponymous"="https://srfi.schemers.org/srfi-86/">https://srfi.schemers.org/srfi-86/</a></td></tr></table>
 
 <h1>Copyright</h1>
 
