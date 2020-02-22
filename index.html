@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ADBMAL, ALET, and ALET*</title>
+    <link href="/admin.css" rel="stylesheet">
+    <link href="/list.css" rel="stylesheet">
+    <link href="/favicon.png" rel="icon" sizes="192x192" type="image/png">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script type="text/x-mathjax-config">
+     MathJax.Hub.Config({
+       tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+     });
+    </script>
+    <script crossorigin="anonymous" integrity=
+            "sha384-Ra6zh6uYMmH5ydwCqqMoykyf1T/+ZcnOQfFPhDrp2kI4OIxadnhsvvA2vv9A7xYv" src=
+            "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+            type="text/javascript"></script>
+  </head>
+
+  <body>
+    <h1>SRFI 182: ADBMAL, ALET, and ALET*</h1>
+    <p class="authors">by Joo ChurlSoo</p>
+    <p class="status">status: <em>draft</em> (2020/2/22)</p><span class="see-also">See also <a href="/srfi-2/">SRFI 2: AND-LET*: an AND with local bindings, a guarded LET* special form</a>, <a href="/srfi-11/">SRFI 11: Syntax for receiving multiple values</a>, <a href="/srfi-51/">SRFI 51: Handling rest list</a>, <a href="/srfi-54/">SRFI 54: Formatting</a>, <a href="/srfi-71/">SRFI 71: Extended LET-syntax for multiple values</a>, and <a href="/srfi-86/">SRFI 86: MU and NU simulating VALUES & CALL-WITH-VALUES, and their related LET-syntax</a>.</span>
+
+    <ul class="info">
+      <li><a href="srfi-182.html">The SRFI Document</a></li>
+      <li><a href="https://srfi-email.schemers.org/srfi-182/">Discussion Archive</a></li>
+      <li><a href="https://github.com/scheme-requests-for-implementation/srfi-182">Git repo (on Github)</a></li>
+      <li>
+        <a href="mailto:srfi-182@srfi.schemers.org">srfi-182@<span class="antispam">nospam</span>srfi.schemers.org (subscribers only)</a></li>
+      <li>
+        <span class="firefox-column-workaround">
+          <form method="POST" action="https://www.simplelists.com/subscribe.php">
+            <div class="title">Subscribe to srfi-182 mailing list</div>
+            <input name="email"
+                   placeholder="email address"
+                   tabindex="1"
+                   type="email" >
+            <input name="name"
+                   placeholder="full name"
+                   tabindex="2"
+                   type="text" >
+            <p>
+              <input id="sub-digest"
+                     name="digest"
+                     tabindex="3"
+                     type="checkbox"
+                     value="digest" >
+              <label for="sub-digest">daily digest?</label></p>
+            <input class="submit"
+                   name="submit"
+                   tabindex="4"
+                   type="submit"
+                   value="Subscribe to srfi-182" >
+            <input type="hidden" name="action" value="subscribe">
+            <input type="hidden" name="list" value="srfi-182@srfi.schemers.org"></form></a></li>
+      <li>
+        <span class="firefox-column-workaround">
+          <form method="POST" action="https://www.simplelists.com/subscribe.php">
+            <p class="title">Unsubscribe from srfi-182 mailing list</p>
+            <input name="email"
+                   placeholder="email address"
+                   tabindex="5"
+                   type="email" >
+            <input class="submit"
+                   name="submit"
+                   tabindex="6"
+                   type="submit"
+                   value="Unsubscribe from srfi-182" >
+            <input name="action"
+                   type="hidden"
+                   value="unsubscribe" >
+            <input name="list"
+                   type="hidden"
+                   value="srfi-182@srfi.schemers.org"></form></a></li></ul>
+    <h2>Abstract</h2><p>Unlike the VALUES and CALL-WITH-VALUES mechanism of R5RS, this one
+uses an explicit representation for multiple return values as a single
+value, namely a procedure.  Decomposition of multiple values is done
+by simple application.  The macro, ADBMAL, evaluates to a procedure
+that takes one procedure argument.  The ADBMAL macro can be compared
+with LAMBDA.  While a LAMBDA expression that consists of
+&lt;formals&gt; and &lt;body&gt; requires some actual arguments later
+when the evaluated LAMBDA expression is called, an ADBMAL expression
+that consists of &lt;expression&gt;s corresponding to actual arguments
+of LAMBDA requires &lt;formals&gt; and &lt;body&gt;, that is, an
+evaluated LAMBDA expression, later when the evaluated ADBMAL
+expression is called.</p>
+
+<p>This SRFI also introduces the new LET-syntax ALET and ALET*, which
+depend on ADBMAL to manipulate multiple values, and which are
+compatible with LET and LET* of R5RS in single-value bindings.  They
+also have a binding form making use of VALUES and CALL-WITH-VALUES to
+handle multiple values, and new binding forms for list, cons, and
+other multiple values.  In addition, they have several new binding
+forms for useful functions such as escape, iteration, optional
+arguments, etc.</p></body></html>
