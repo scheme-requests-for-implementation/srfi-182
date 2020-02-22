@@ -117,11 +117,11 @@ macros of SRFI 86.
 
     <p>In SRFI 71:</p>
     <pre>
-(srfi-let ((a (begin (display &quot;1st&quot;) 1))
-	   (b c (values (begin (display &quot;2nd&quot;) 2) 3))
-	   (d (begin (display &quot;3rd&quot;) 4))
-	   ((values e . f) (values (begin (display &quot;4th&quot;) 5) 6)))
-	  (list a b c d e f))
+(let ((a (begin (display &quot;1st&quot;) 1))
+      (b c (values (begin (display &quot;2nd&quot;) 2) 3))
+      (d (begin (display &quot;3rd&quot;) 4))
+      ((values e . f) (values (begin (display &quot;4th&quot;) 5) 6)))
+  (list a b c d e f))
 =&gt; 2nd4th1st3rd(1 2 3 4 5 (6))
     </pre>
 
@@ -174,11 +174,13 @@ macros of SRFI 86.
 =&gt; '(3 (4 5) 3 (4 5) 3 4 5 3 4 5 3 (4 5) 3 4 5 3 (4 5) (3 4 5) (3 4 5))
     </pre></li>
 
-  <li><p>The named-ALET and named-ALET* are allowed to take multiple values bindings.</p>
+  <li><p>The named-ALET and named-ALET* are allowed to take multiple-
+  valued bindings.  They have a new binding form that has an iterative
+  function like named-ALET.</p>
 
     <p>In SRFI 71:</p>
     <pre>
-(srfi-let tag ((a 1) (b 2) (c 3) (d 4) (e 5))
+(let tag ((a 1) (b 2) (c 3) (d 4) (e 5))
 	  (if (&lt; a 10) (tag 10 b c d e) (list a b c d e)))
 =&gt; '(10 2 3 4 5)
     </pre>
@@ -187,36 +189,26 @@ macros of SRFI 86.
 (define cs (cons 1 2))
 (define ls (list 3 4 5))
 (define mal (adbmal 1 2))
+(define	val (lambda () (values 1 2)))
 
 (alet tag ((cons a b cs) (c d e ls))
+  (if (&lt; a 10) (tag 10 b c d e) (list a b c d e)))
+=&gt; '(10 2 3 4 5)
+(alet (((cons a b cs) (c d e ls) . tag))
   (if (&lt; a 10) (tag 10 b c d e) (list a b c d e)))
 =&gt; '(10 2 3 4 5)
 
 (alet* tag ((cons a b cs) (c d e ls) ((adbmal c . d) mal) (e a))
   (if (&lt; a 10) (tag 10 b c d e c d 10) (list a b c d e)))
 =&gt; '(10 2 1 (2) 10)
-    </pre></li>
-
-  <li><p>They have a new binding form that has an iterative function like named-ALET.
-    It is also allowed to take multiple-valued bindings.</p>
-    <pre>
-(define cs (cons 1 2))
-(define ls (list 3 4 5))
-(define mal (adbmal 1 2))
-(define	val (lambda () (values 1 2)))
-
-(alet (((cons a b cs) (c d e ls) . tag))
-  (if (&lt; a 10) (tag 10 b c d e) (list a b c d e)))
-=&gt; '(10 2 3 4 5)
-
 (alet* (((cons a b cs) (c d e ls) ((adbmal c . d) mal) (e a) . tag))
   (if (&lt; a 10) (tag 10 b c d e c d 10) (list a b c d e)))
-=&gt; '(10 2 1 (2) 10)
+=&gt; error lambda: duplicate argument name at: c
 
 (alet* ((values a b (val))
-	((cons a b cs) (c d e ls) ((adbmal c . d) mal) (e a) . tag))
-  (if (&lt; a 10) (tag 10 b c d e c d 10) (list a b c d e)))
-=&gt; '(10 2 1 (2) 10)
+	((cons a b cs) (c d e ls) . tag))
+  (if (&lt; a 10) (tag 10 b c d e) (list a b c d e)))
+=&gt; '(10 2 3 4 5)
     </pre></li>
 
   <li><p>They have a new binding form that has an escape function.</p>
@@ -249,7 +241,7 @@ macros of SRFI 86.
 =&gt; 1st2nd#f
     </pre></li>
 
-  <li><p>The LETREC and LETREC* are integrated into the ALET and ALET* with a
+  <li><p>The LETREC and LETREC* forms are integrated into the ALET and ALET* with a
     syntactic keyword `rec'.</p>
     <pre>
 (alet* ((a 1)
