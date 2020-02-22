@@ -141,7 +141,7 @@ macros of SRFI 86.
 
     <pre>
 (define mal (adbmal 1 2))
-(define	val (lambda () (values 1 2)))
+(define val (lambda () (values 1 2)))
 
 (alet* ((adbmal a b mal)
 	(values c d (val))		;different from SRFI 71
@@ -189,7 +189,7 @@ macros of SRFI 86.
 (define cs (cons 1 2))
 (define ls (list 3 4 5))
 (define mal (adbmal 1 2))
-(define	val (lambda () (values 1 2)))
+(define val (lambda () (values 1 2)))
 
 (alet tag ((cons a b cs) (c d e ls))
   (if (&lt; a 10) (tag 10 b c d e) (list a b c d e)))
