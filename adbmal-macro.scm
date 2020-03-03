@@ -8,6 +8,43 @@
     `(lambda (,f) (apply ,f ,@args))))
 (define (adbmal* . args) (lambda (f) (apply f args)))
 
+;; (define (split-at-dot pair)		;(a b . c) => (c a b)
+;;   (let loop ((tail pair)		;(a b c)   => (() a b c)
+;; 	     (head '()))
+;;     (if (pair? tail)
+;; 	(loop (cdr tail) (cons (car tail) head))
+;; 	(cons tail (reverse head)))))
+
+(define (split-at-dot pair)		;(a b . c) => (c a b)
+  (let loop ((tail pair)		;(a b c)   => (c a b)
+	     (head '()))
+    (if (pair? tail)
+	(if (null? (cdr tail))
+	    (cons (car tail) (reverse head))
+	    (loop (cdr tail) (cons (car tail) head)))
+	(cons tail (reverse head)))))
+
+(define (split-at-last pair)		;(a b c) => (c a b)
+  (let loop ((tail pair)
+	     (head '()))
+    (if (null? (cdr tail))
+	(cons (car tail) (reverse head))
+	(loop (cdr tail) (cons (car tail) head)))))
+
+(define (pair->gensym-pair pair)	;(a b . c) => (g1 g2 . g3)
+  (if (pair? pair)
+      (cons (gensym) (pair->gensym-pair (cdr pair)))
+      (if (null? pair)
+	  '()
+	  (gensym))))
+
+(define (pair->list pair)		;(a b . c) => (a b c)
+  (if (pair? pair)
+      (cons (car pair) (pair->list (cdr pair)))
+      (if (null? pair)
+	  '()
+	  (list pair))))
+
 (define-macro (alet-and binds tmpvars . body)
   (define (helper bindings tmps body)
     (if (null? bindings)
@@ -38,6 +75,30 @@
 	      `(let ((,var ,val))
 		 (and ,(car opt) (alet-and* ,(cdr bindings) ,@body))))))))
 
+(define-macro (alet-rec bindings . body) ;r6rs letrec
+  (let ((genargs (pair->gensym-pair bindings)))
+    `(let ,(map (lambda (nv) `(,(car nv) '<undefined>)) bindings)
+       (let ,(map (lambda (t nv) `(,t ,(cadr nv))) genargs bindings)
+	 ,@(map (lambda (nv t) `(set! ,(car nv) ,t)) bindings genargs)
+	 (begin ,@body)))))
+
+(define-macro (alet-rec* bindings . body) ;r6rs letrec* sequential
+  ;; `(let* ,(map (lambda (nv) `(,(car nv) '<undefined>)) bindings) ;infinite loop
+  `(let ,(map (lambda (nv) `(,(car nv) '<undefined>)) bindings)
+     ,@(map (lambda (nv) `(set! ,(car nv) ,(cadr nv))) bindings)
+     (begin ,@body)))
+
+(define-macro (lambda* args . body)
+  (cond
+   ((pair? args)
+    (let ((gen-args (pair->gensym-pair args)))
+      `(lambda ,gen-args
+	 (let* ,(map (lambda (v g) `(,v ,g))
+		     (pair->list args) (pair->list gen-args))
+	   ,@body))))
+   ((null? args) `(lambda () ,@body))
+   ((symbol? args) `(lambda ,args ,@body))))
+
 (define-macro (wow-opt n v . r)
   (cond
    ((null? r) v)
@@ -49,6 +110,25 @@
     (let ((t (car r)) (ts (cadr r)) (fs (caddr r)))
       `(let ((,n ,v)) (if ,t ,ts ,fs))))))
 
+(define-macro (wow-cat-last z n d . r)
+  (cond
+   ((null? r)
+    `(if (null? (cdr ,z))
+	 (car ,z)
+	 (error 'alet* "too many arguments" ,z)))
+   ((or (null? (cdr r)) (null? (cddr r)))
+    (let ((t (car r))
+	  (ts (if (null? (cdr r)) n (cadr r))))
+      `(if (null? (cdr ,z))
+	   (let ((,n (car ,z)))
+	     (if ,t ,ts (error 'alet* "too many argument" ,z)))
+	   (error 'alet* "too many arguments" ,z))))
+   (else
+    (let ((t (car r)) (ts (cadr r)) (fs (caddr r)))
+      `(if (null? (cdr ,z))
+	   (let ((,n (car ,z)))
+	     (if ,t ,ts ,fs))
+	   (error 'alet* "too many arguments" ,z))))))
 (define-macro (wow-cat! z n d . r)
   (cond
    ((null? r)
@@ -189,54 +269,6 @@
 				       (if ,t ,ts ,fs))
 				     (lp (cons ,x ,head) ,y)))))))))))))
 
-;; (define (split-at-dot pair)		;(a b . c) => (c a b)
-;;   (let loop ((tail pair)		;(a b c)   => (() a b c)
-;; 	     (head '()))
-;;     (if (pair? tail)
-;; 	(loop (cdr tail) (cons (car tail) head))
-;; 	(cons tail (reverse head)))))
-
-(define (split-at-dot pair)		;(a b . c) => (c a b)
-  (let loop ((tail pair)		;(a b c)   => (c a b)
-	     (head '()))
-    (if (pair? tail)
-	(if (null? (cdr tail))
-	    (cons (car tail) (reverse head))
-	    (loop (cdr tail) (cons (car tail) head)))
-	(cons tail (reverse head)))))
-
-(define (split-at-last pair)		;(a b c) => (c a b)
-  (let loop ((tail pair)
-	     (head '()))
-    (if (null? (cdr tail))
-	(cons (car tail) (reverse head))
-	(loop (cdr tail) (cons (car tail) head)))))
-
-(define (pair->gensym-pair pair)	;(a b . c) => (g1 g2 . g3)
-  (if (pair? pair)
-      (cons (gensym) (pair->gensym-pair (cdr pair)))
-      (if (null? pair)
-	  '()
-	  (gensym))))
-
-(define (pair->list pair)		;(a b . c) => (a b c)
-  (if (pair? pair)
-      (cons (car pair) (pair->list (cdr pair)))
-      (if (null? pair)
-	  '()
-	  (list pair))))
-
-(define-macro (lambda* args . body)
-  (cond
-   ((pair? args)
-    (let ((gen-args (pair->gensym-pair args)))
-      `(lambda ,gen-args
-	 (let* ,(map (lambda (v g) `(,v ,g))
-		     (pair->list args) (pair->list gen-args))
-	   ,@body))))
-   ((null? args) `(lambda () ,@body))
-   ((symbol? args) `(lambda ,args ,@body))))
-
 (define (%opt-helper z clauses parent varlist pattern body)
   (cond
    ((symbol? clauses)
@@ -298,6 +330,14 @@
 		   ,(%opt-helper y (cdr clauses) parent
 				 (append varlist (list (list var t)))
 				 pattern body))))
+	     ((and (eq? 'unquote (car var)) (null? (cdr clauses)))
+	      (let ((t (gensym)))
+		`(let ((,t (if (null? ,z)
+			       ,def
+			       (wow-cat-last ,z ,(cadr var) ,@(cdr cl)))))
+		   ,(%alet-helper parent
+				  (append varlist (list (list (cadr var) t)))
+				  pattern body))))
 	     ((eq? 'unquote (car var))
 	      (let ((t (gensym)))
 		`(let ((,t (if (null? ,z)
@@ -470,16 +510,35 @@
 							  (map (lambda (v g) `(,v ,g))
 							       vlist glist))
 						  (cdr pattern) body))))
+		     ;; You can choose the one of the following three.
 		     ((eq? (car vars) 'rec)
 		      (let* ((vlist (map car (cdr vars)))
-			     (glist (pair->gensym-pair vlist)))
-			`((letrec ,(cdr vars) (adbmal ,@vlist))
-			  (lambda ,glist
-			    ,(%alet-helper parent
-					   (append varlist
-						   (map (lambda (v g) `(,v ,g))
-							vlist glist))
-					   (cdr pattern) body)))))
+		      	     (glist (pair->gensym-pair vlist)))
+		      	`((letrec ,(cdr vars) (adbmal ,@vlist))
+		      	  (lambda ,glist
+		      	    ,(%alet-helper parent
+		      			   (append varlist
+		      				   (map (lambda (v g) `(,v ,g))
+		      					vlist glist))
+		      			   (cdr pattern) body)))))
+		     ;; ((eq? (car vars) 'rec)
+		     ;;  (let* ((vlist (map car (cdr vars)))
+		     ;;  	     (glist (pair->gensym-pair vlist)))
+		     ;;  	`(let ,(map (lambda (n) `(,n '<undefined>)) vlist)
+		     ;;  	   (let ,(map (lambda (t v) `(,t ,v)) glist (map cadr (cdr vars)))
+		     ;;  	     ,(%alet-helper parent
+		     ;;  			    (append varlist
+		     ;;  				    (map (lambda (v g) `(,v (begin (set! ,v ,g) ,v)))
+		     ;;  					 vlist glist))
+		     ;;  			    (cdr pattern) body)))))
+		     ;; ((eq? (car vars) 'rec)
+		     ;;  (let ((vlist (map car (cdr vars))))
+		     ;;  	`(let ,(map (lambda (n) `(,n '<undefined>)) vlist)
+		     ;; 	   ,(%alet-helper parent
+		     ;; 			  (append varlist
+		     ;; 				  (map (lambda (v l) `(,v (begin (set! ,v ,l) ,v)))
+		     ;; 				       vlist (map cadr (cdr vars))))
+		     ;; 			  (cdr pattern) body))))
 		     ((null? (cddr vars))
 		      (let ((t (gensym)))
 			`((lambda (,t)
@@ -616,6 +675,12 @@
 		   ,(%opt-helper* y (cdr clauses) parent
 				  (append varlist (list var))
 				  pattern body))))
+	     ((and (eq? 'unquote (car var)) (null? (cdr clauses)))
+	      `(let ((,(cadr var) (if (null? ,z)
+				      ,def
+				      (wow-cat-last ,z ,(cadr var) ,@(cdr cl)))))
+		 ,(%alet-helper* parent (append varlist (list (cadr var)))
+				 pattern body)))
 	     ((eq? 'unquote (car var))
 	      `(let ((,(cadr var) (if (null? ,z)
 				      ,def

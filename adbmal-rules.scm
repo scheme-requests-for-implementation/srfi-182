@@ -33,7 +33,7 @@
      (let ((n v))
        (and t (alet-and* (nvt ...) bd ...))))))
 
-(define-syntax alet-rec
+(define-syntax alet-rec			;r6rs letrec
   (syntax-rules ()
     ((alet-rec ((n v) ...) bd ...)
      (alet-rec "rec" () ((n v) ...) bd ...))
@@ -43,15 +43,15 @@
      (let ((n '<undefined>) ...)
        (let ((t v) ...)
 	 (set! n t) ...
-	 (let () bd ...))))))
+	 (begin bd ...))))))
 
-(define-syntax alet-rec*
+(define-syntax alet-rec*		;r6rs letrec* sequential
   (syntax-rules ()
     ((alet-rec* ((n v) ...) bd ...)
-     ;; (let* ((n '<undefined>) ...)	;duplication
-     (let ((n '<undefined>) ...)	;no duplication
+     ;; (let* ((n '<undefined>) ...)	;This can invoke an infinite loop.
+     (let ((n '<undefined>) ...)
        (set! n v) ...
-       (let () bd ...)))))
+       (begin bd ...)))))
 
 (define-syntax lambda*
   (syntax-rules ()
@@ -78,6 +78,24 @@
     ((wow-opt n v t ts fs)
      (let ((n v)) (if t ts fs)))))
 
+(define-syntax wow-cat-last
+  (syntax-rules ()
+    ((wow-cat-last z n d)
+     (if (null? (cdr z))
+	 (car z)
+	 (error 'alet* "too many arguments" z)))
+    ((wow-cat-last z n d t)
+     (wow-cat-last z n d t n))
+    ((wow-cat-last z n d t ts)
+     (if (null? (cdr z))
+	 (let ((n (car z)))
+	   (if t ts (error 'alet* "too many argument" z)))
+	 (error 'alet* "too many arguments" z)))
+    ((wow-cat-last z n d t ts fs)
+     (if (null? (cdr z))
+	 (let ((n (car z)))
+	   (if t ts fs))
+	 (error 'alet* "too many arguments" z)))))
 (define-syntax wow-cat!
   (syntax-rules ()
     ((wow-cat! z n d)
@@ -277,6 +295,7 @@
     ((%alet "and" (p ...) (nv ...) () (bn ...) bd ...)
      (%alet (p ...) (nv ...) (bn ...) bd ...))
 
+    ;; You can choose the one of the following three.
     ((%alet (p ...) (nv ...) ((rec (n v) mv ...) bn ...) bd ...)
      (%alet "rec" (p ...) (nv ...) () ((n v) mv ...) (bn ...) bd ...))
     ((%alet "rec" (p ...) (nv ...) (nvt ...) ((n v) mv ...) (bn ...) bd ...)
@@ -284,6 +303,19 @@
     ((%alet "rec" (p ...) (nv ...) ((n v t) ...) () (bn ...) bd ...)
      ((letrec ((n v) ...) (adbmal n ...))
       (lambda (t ...) (%alet (p ...) (nv ...) (bn ...) bd ...))))
+
+    ;; ((%alet (p ...) (nv ...) ((rec (n v) mv ...) bn ...) bd ...)
+    ;;  (%alet "rec" (p ...) (nv ...) () ((n v) mv ...) (bn ...) bd ...))
+    ;; ((%alet "rec" (p ...) (nv ...) (nvt ...) ((n v) mv ...) (bn ...) bd ...)
+    ;;  (%alet "rec" (p ...) (nv ... (n (begin (set! n t) n))) (nvt ... (n v t)) (mv ...) (bn ...) bd ...))
+    ;; ((%alet "rec" (p ...) (nv ...) ((n v t) ...) () (bn ...) bd ...)
+    ;;  (let ((n '<undefined>) ...)
+    ;;    (let ((t v) ...)
+    ;; 	 (%alet (p ...) (nv ...) (bn ...) bd ...))))
+
+    ;; ((%alet (p ...) (nv ...) ((rec (n1 v1) (n2 v2) ...) bn ...) bd ...)
+    ;;  (let ((n1 '<undefined>) (n2 '<undefined>) ...)
+    ;;    (%alet (p ...) (nv ... (n1 (begin (set! n1 v1) n1)) (n2 (begin (set! n2 v2) n2)) ...) (bn ...) bd ...)))
 
     ((%alet (p ...) (nv ...) ((a b) bn ...) bd ...)
      ((lambda (t) (%alet (p ...) (nv ... (a t)) (bn ...) bd ...)) b))
@@ -303,6 +335,9 @@
     ((%alet "opt" (p ...) (nv ...) z ((`n d t ...) . e) (bn ...) bd ...)
      (let ((v (if (null? z) d (wow-key! z 1 (n `n eq?) d t ...))))
        (%alet "opt" (p ...) (nv ... (n v)) z e (bn ...) bd ...)))
+    ((%alet "opt" (p ...) (nv ...) z ((,n d t ...)) (bn ...) bd ...)
+     (let ((v (if (null? z) d (wow-cat-last z n d t ...))))
+       (%alet (p ...) (nv ... (n v)) (bn ...) bd ...)))
     ((%alet "opt" (p ...) (nv ...) z ((,n d t ...) . e) (bn ...) bd ...)
      (let ((v (if (null? z) d (wow-cat! z n d t ...))))
        (%alet "opt" (p ...) (nv ... (n v)) z e (bn ...) bd ...)))
@@ -456,6 +491,9 @@
     ((%alet* "opt" (p ...) (m ...) z ((`n d t ...) . e) (bn ...) bd ...)
      (let ((n (if (null? z) d (wow-key! z 1 (n `n eq?) d t ...))))
        (%alet* "opt" (p ...) (m ... n) z e (bn ...) bd ...)))
+    ((%alet* "opt" (p ...) (m ...) z ((,n d t ...)) (bn ...) bd ...)
+     (let ((n (if (null? z) d (wow-cat-last z n d t ...))))
+       (%alet* (p ...) (m ... n) (bn ...) bd ...)))
     ((%alet* "opt" (p ...) (m ...) z ((,n d t ...) . e) (bn ...) bd ...)
      (let ((n (if (null? z) d (wow-cat! z n d t ...))))
        (%alet* "opt" (p ...) (m ... n) z e (bn ...) bd ...)))
