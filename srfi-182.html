@@ -36,6 +36,9 @@ Joo ChurlSoo
   <li>Draft #1 published: 2020-02-22</li>
 </ul>
 
+<h1>Part 1: ADBMAL, ALET, ALET*</h1>
+
+
 <h1>Abstract</h1>
 
 <p>Unlike the VALUES and CALL-WITH-VALUES mechanism of R5RS, this SRFI
@@ -255,17 +258,20 @@ macros of SRFI 86.
     <pre>
 ((lambda n
    (alet* ((opt n ('x 11) (('y 'yy) 22) (,z &quot;s&quot; (string? z)) (a 10) (b 20) . c))
-     (list x y z a b c))) 1 2 3 &quot;str&quot; 'yy 20 30 'x 10)
+     (list x y z a b c)))
+ 1 2 3 &quot;str&quot; 'yy 20 30 'x 10)
 =&gt; (11 20 &quot;str&quot; 3 1 (2 30 x 10))
 
 ((lambda n
    (alet* ((opt n (`x 11) ((`y 'yy) 22) (,z &quot;s&quot; (string? z)) (a 10) (b 20) . c))
-     (list x y z a b c))) 1 2 3 &quot;str&quot; 'yy 20 30 'x 10)
+     (list x y z a b c)))
+ 1 2 3 &quot;str&quot; 'yy 20 30 'x 10)
 =&gt; (10 20 &quot;str&quot; 1 2 (3 30))
 
 ((lambda n
    (alet* ((opt n ('x 11) (('y 'yy) 22) (,z &quot;s&quot; (string? z)) (a 10) (b 20) . c))
-     (list x y z a b c))) 'yy 20 'x 10 1 2 3 &quot;str&quot; 30)
+     (list x y z a b c)))
+ 'yy 20 'x 10 1 2 3 &quot;str&quot; 30)
 =&gt; (10 20 &quot;str&quot; 1 2 (3 30))
     </pre></li></ol>
 
@@ -360,24 +366,18 @@ stops and returns #f.  When there is a &lt;test&gt;, the process is continued
 regardless of the value of &lt;expr&gt; unless the value of &lt;test&gt; is false.  If the
 value of &lt;test&gt; is false, it stops and returns #f.</p></li>
 
-  <li><pre>10. (opt &lt;rest list&gt; &lt;clause1&gt; &lt;clause2&gt; ... . &lt;rest var&gt;)
-&lt;clause&gt; --&gt; &lt;var&gt;			;( &lt;var&gt; #f) &lt;optional sequent variable&gt;
-	  | ,&lt;var&gt;			;(,&lt;var&gt; #f) &lt;optional unnamed variable&gt;
-	  | '&lt;var&gt;			;('&lt;var&gt; #f) &lt;optional keyword variable&gt;
-	  | `&lt;var&gt;			;(`&lt;var&gt; #f) &lt;optional keyword variable&gt;
-	  | (&lt;var-spec&gt; &lt;default&gt;)
-	  | (&lt;var-spec&gt; &lt;default&gt; &lt;test&gt;)
-	  | (&lt;var-spec&gt; &lt;default&gt; &lt;test&gt; &lt;true substitute&gt;)
-	  | (&lt;var-spec&gt; &lt;default&gt; &lt;test&gt; &lt;true substitute&gt; &lt;false substitute&gt;)
+  <li><pre>10. (opt &lt;rest list&gt; &lt;cl1&gt; &lt;cl2&gt; ... . &lt;rest var&gt;)
+&lt;cl&gt; --&gt; &lt;vars&gt;
+      | (&lt;vars&gt;  &lt;default&gt;  [&lt;test&gt;] [&lt;true substitute&gt;] [&lt;false substitute&gt;])
+      | (&lt;vark&gt; [&lt;default&gt;] [&lt;test&gt;] [&lt;true substitute&gt;] [&lt;false substitute&gt;])
 
-&lt;var-spec&gt; --&gt; &lt;var&gt;		  ;&lt;optional sequent variable&gt;
-	    | ,&lt;var&gt;		  ;&lt;optional unnamed variable&gt;
-	    | '&lt;var&gt;		  ;&lt;optional keyword variable&gt;: two in a time
-	    | `&lt;var&gt;		  ;&lt;optional keyword variable&gt;: one in a time
-	    | ('&lt;var&gt; &lt;keyword&gt; [&lt;equivalence predicate&gt;])
-	    | (`&lt;var&gt; &lt;keyword&gt; [&lt;equivalence predicate&gt;])
-	    | ( &lt;var&gt; &lt;keyword&gt;)  ;((&lt;var&gt; &lt;keyword&gt;) &lt;default&gt;)
-	      	      		  ;use not macro but function to find keywords
+&lt;vars&gt; --&gt;   &lt;var&gt;  	;( &lt;var&gt; #f) &lt;optional sequent variable&gt;
+       	  | ,&lt;var&gt;	;(,&lt;var&gt; #f) &lt;optional unnamed variable&gt;
+	  | '&lt;var&gt;	;('&lt;var&gt; #f) &lt;optional keyword variable&gt;: two in a time
+	  | `&lt;var&gt;	;(`&lt;var&gt; #f) &lt;optional keyword variable&gt;: one in a time
+
+&lt;vark&gt; --&gt; ('&lt;var&gt; &lt;keyword&gt; [&lt;equivalence predicate&gt;])
+       	  |(`&lt;var&gt; &lt;keyword&gt; [&lt;equivalence predicate&gt;])
 
 &lt;equivalence predicate&gt; --&gt; eq?		;default equivalent predicate
 	     		  | eqv?
@@ -436,11 +436,11 @@ available both in the <a href="https://github.com/scheme-requests-for-implementa
 <table class="references">
 <tr><td>[R5RS]</td><td>Richard Kelsey, William Clinger, and Jonathan Rees: Revised(5) Report on the Algorithmic Language Scheme.<a href="http://www.schemers.org/Documents/Standards/R5RS/" class="eponymous">http://www.schemers.org/Documents/Standards/R5RS/</a></td></tr>
 <tr><td>[R6RS]</td><td>Michael Sperber, R. Kent Dybvig, Matthew Flatt, and Anton von Straaten: Revised(6) Report on the Algorithmic Language Scheme.<a class="eponymous" href="http://www.r6rs.org">http://www.r6rs.org</a></td></tr>
-<tr><td>[SRFI 2]</td><td>Oleg Kiselyov: AND-LET*: and AND with local bindings, a guarded LET* special form. <a class="eponymous" href="https://srfi.schemers.org/srfi-2/">https://srfi.schemers.org/srfi-2/</a></td></tr>
-<tr><td>[SRFI 11]</td><td>Lars T. Hansen: Syntax for receiving multiple values. <a class="eponymous" href="https://srfi.schemers.org/srfi-11/">https://srfi.schemers.org/srfi-11/</a></td></tr>
-<tr><td>[SRFI 51]</td><td>Joo ChurlSoo: Handling rest list. <a class="eponymous" href="https://srfi.schemers.org/srfi-51/">https://srfi.schemers.org/srfi-51/</a></td></tr>
-<tr><td>[SRFI 54]</td><td>Joo ChurlSoo: Formatting. <a class="eponymous" href="https://srfi.schemers.org/srfi-54/">https://srfi.schemers.org/srfi-54/</a></td></tr>
-<tr><td>[SRFI 71]</td><td>Sebastian Egner: Extended LET-syntax for multiple values. <a class="eponymous" href="https://srfi.schemers.org/srfi-71/">https://srfi.schemers.org/srfi-71/</a></td></tr>
+<tr><td>[SRFI 2]</td><td>Oleg Kiselyov: AND-LET*: and AND with local bindings, a guarded LET* special form.<a class="eponymous" href="https://srfi.schemers.org/srfi-2/">https://srfi.schemers.org/srfi-2/</a></td></tr>
+<tr><td>[SRFI 11]</td><td>Lars T. Hansen: Syntax for receiving multiple values.<a class="eponymous" href="https://srfi.schemers.org/srfi-11/">https://srfi.schemers.org/srfi-11/</a></td></tr>
+<tr><td>[SRFI 51]</td><td>Joo ChurlSoo: Handling rest list.<a class="eponymous" href="https://srfi.schemers.org/srfi-51/">https://srfi.schemers.org/srfi-51/</a></td></tr>
+<tr><td>[SRFI 54]</td><td>Joo ChurlSoo: Formatting.<a class="eponymous" href="https://srfi.schemers.org/srfi-54/">https://srfi.schemers.org/srfi-54/</a></td></tr>
+<tr><td>[SRFI 71]</td><td>Sebastian Egner: Extended LET-syntax for multiple values.<a class="eponymous" href="https://srfi.schemers.org/srfi-71/">https://srfi.schemers.org/srfi-71/</a></td></tr>
 <tr><td>[SRFI 86]</td><td>Joo ChurlSoo: MU and NU simulating VALUES &amp; CALL-WITH-VALUES, and their related LET-syntax.<a class="eponymous" href="https://srfi.schemers.org/srfi-86/">https://srfi.schemers.org/srfi-86/</a></td></tr></table>
 
 <h1>Copyright</h1>

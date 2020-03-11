@@ -10,10 +10,10 @@
 
 ;; (define (split-at-dot pair)		;(a b . c) => (c a b)
 ;;   (let loop ((tail pair)		;(a b c)   => (() a b c)
-;;	     (head '()))
+;; 	     (head '()))
 ;;     (if (pair? tail)
-;;	(loop (cdr tail) (cons (car tail) head))
-;;	(cons tail (reverse head)))))
+;; 	(loop (cdr tail) (cons (car tail) head))
+;; 	(cons tail (reverse head)))))
 
 (define (split-at-dot pair)		;(a b . c) => (c a b)
   (let loop ((tail pair)		;(a b c)   => (c a b)
@@ -284,7 +284,7 @@
     (let ((cl (car clauses)))
       (if (pair? cl)
 	  (let ((var (car cl))
-		(def (cadr cl)))
+		(def (if (null? (cdr cl)) #f (cadr cl))))
 	    (cond
 	     ((eq? 'unquote var)
 	      (let ((t (gensym)))
@@ -377,21 +377,20 @@
 	     (else
 	      (let ((naked-v (cadr (car var)))
 		    (quote-s (car (car var)))
+		    (cdrcl (if (null? (cdr cl)) (list def) (cdr cl)))
 		    (t (gensym)))
 		(cond
 		 ((eq? 'quote quote-s)
 		  `(let ((,t (if (null? ,z)
 				 ,def
-				 (wow-key! ,z 2 (,naked-v ,@(cdr var))
-					   ,def ,@(cddr cl)))))
+				 (wow-key! ,z 2 (,naked-v ,@(cdr var)) ,@cdrcl))))
 		     ,(%opt-helper z (cdr clauses) parent
 				   (append varlist (list (list naked-v t)))
 				   pattern body)))
 		 ((eq? 'quasiquote quote-s)
 		  `(let ((,t (if (null? ,z)
 				 ,def
-				 (wow-key! ,z 1 (,naked-v ,@(cdr var))
-					   ,def ,@(cddr cl)))))
+				 (wow-key! ,z 1 (,naked-v ,@(cdr var)) ,@cdrcl))))
 		     ,(%opt-helper z (cdr clauses) parent
 				   (append varlist (list (list naked-v t)))
 				   pattern body))))))))
@@ -448,11 +447,11 @@
 		      (let ((gen-args (pair->gensym-pair (cdar vars))))
 			;; `(receive ,gen-args ,(cadr vars)
 			;;    ,(%alet-helper parent
-			;;		  (append varlist
-			;;			  (map (lambda (v g) `(,v ,g))
-			;;			       (pair->list (cdar vars))
-			;;			       (pair->list gen-args)))
-			;;		  (cdr pattern) body))))
+			;; 		  (append varlist
+			;; 			  (map (lambda (v g) `(,v ,g))
+			;; 			       (pair->list (cdar vars))
+			;; 			       (pair->list gen-args)))
+			;; 		  (cdr pattern) body))))
 			`(call-with-values (lambda () ,(cadr vars))
 			   (lambda ,gen-args
 			     ,(%alet-helper parent
@@ -513,32 +512,32 @@
 		     ;; You can choose the one of the following three.
 		     ((eq? (car vars) 'rec)
 		      (let* ((vlist (map car (cdr vars)))
-			     (glist (pair->gensym-pair vlist)))
-			`((letrec ,(cdr vars) (adbmal ,@vlist))
-			  (lambda ,glist
-			    ,(%alet-helper parent
-					   (append varlist
-						   (map (lambda (v g) `(,v ,g))
-							vlist glist))
-					   (cdr pattern) body)))))
+		      	     (glist (pair->gensym-pair vlist)))
+		      	`((letrec ,(cdr vars) (adbmal ,@vlist))
+		      	  (lambda ,glist
+		      	    ,(%alet-helper parent
+		      			   (append varlist
+		      				   (map (lambda (v g) `(,v ,g))
+		      					vlist glist))
+		      			   (cdr pattern) body)))))
 		     ;; ((eq? (car vars) 'rec)
-		     ;;	 (let* ((vlist (map car (cdr vars)))
-		     ;;		     (glist (pair->gensym-pair vlist)))
-		     ;;		`(let ,(map (lambda (n) `(,n '<undefined>)) vlist)
-		     ;;		   (let ,(map (lambda (t v) `(,t ,v)) glist (map cadr (cdr vars)))
-		     ;;		     ,(%alet-helper parent
-		     ;;				    (append varlist
-		     ;;					    (map (lambda (v g) `(,v (begin (set! ,v ,g) ,v)))
-		     ;;						 vlist glist))
-		     ;;				    (cdr pattern) body)))))
+		     ;;  (let* ((vlist (map car (cdr vars)))
+		     ;;  	     (glist (pair->gensym-pair vlist)))
+		     ;;  	`(let ,(map (lambda (n) `(,n '<undefined>)) vlist)
+		     ;;  	   (let ,(map (lambda (t v) `(,t ,v)) glist (map cadr (cdr vars)))
+		     ;;  	     ,(%alet-helper parent
+		     ;;  			    (append varlist
+		     ;;  				    (map (lambda (v g) `(,v (begin (set! ,v ,g) ,v)))
+		     ;;  					 vlist glist))
+		     ;;  			    (cdr pattern) body)))))
 		     ;; ((eq? (car vars) 'rec)
-		     ;;	 (let ((vlist (map car (cdr vars))))
-		     ;;		`(let ,(map (lambda (n) `(,n '<undefined>)) vlist)
-		     ;;		   ,(%alet-helper parent
-		     ;;				  (append varlist
-		     ;;					  (map (lambda (v l) `(,v (begin (set! ,v ,l) ,v)))
-		     ;;					       vlist (map cadr (cdr vars))))
-		     ;;				  (cdr pattern) body))))
+		     ;;  (let ((vlist (map car (cdr vars))))
+		     ;;  	`(let ,(map (lambda (n) `(,n '<undefined>)) vlist)
+		     ;; 	   ,(%alet-helper parent
+		     ;; 			  (append varlist
+		     ;; 				  (map (lambda (v l) `(,v (begin (set! ,v ,l) ,v)))
+		     ;; 				       vlist (map cadr (cdr vars))))
+		     ;; 			  (cdr pattern) body))))
 		     ((null? (cddr vars))
 		      (let ((t (gensym)))
 			`((lambda (,t)
@@ -569,10 +568,10 @@
 			     (gen (pair->gensym-pair var)))
 			;; `(receive ,gen ,(car tmp)
 			;;    ,(%alet-helper parent
-			;;		  (append varlist
-			;;			  (map (lambda (v g) `(,v ,g))
-			;;			       var gen))
-			;;		  (cdr pattern) body))))
+			;; 		  (append varlist
+			;; 			  (map (lambda (v g) `(,v ,g))
+			;; 			       var gen))
+			;; 		  (cdr pattern) body))))
 			`(call-with-values (lambda () ,(car tmp))
 			   (lambda ,gen
 			     ,(%alet-helper parent
@@ -634,7 +633,7 @@
     (let ((cl (car clauses)))
       (if (pair? cl)
 	  (let ((var (car cl))
-		(def (cadr cl)))
+		(def (if (null? (cdr cl)) #f (cadr cl))))
 	    (cond
 	     ((eq? 'unquote var)
 	      `(let ((,def (if (null? ,z)
@@ -715,21 +714,20 @@
 				pattern body)))
 	     (else
 	      (let ((naked-v (cadr (car var)))
-		    (quote-s (car (car var))))
+		    (quote-s (car (car var)))
+		    (cdrcl (if (null? (cdr cl)) (list def) (cdr cl))))
 		(cond
 		 ((eq? 'quote quote-s)
 		  `(let ((,naked-v (if (null? ,z)
 				       ,def
-				       (wow-key! ,z 2 (,naked-v ,@(cdr var))
-						 ,def ,@(cddr cl)))))
+				       (wow-key! ,z 2 (,naked-v ,@(cdr var)) ,@cdrcl))))
 		     ,(%opt-helper* z (cdr clauses) parent
 				    (append varlist (list naked-v))
 				    pattern body)))
 		 ((eq? 'quasiquote quote-s)
 		  `(let ((,naked-v (if (null? ,z)
 				       ,def
-				       (wow-key! ,z 1 (,naked-v ,@(cdr var))
-						 ,def ,@(cddr cl)))))
+				       (wow-key! ,z 1 (,naked-v ,@(cdr var)) ,@cdrcl))))
 		     ,(%opt-helper* z (cdr clauses) parent
 				    (append varlist (list naked-v))
 				    pattern body))))))))
@@ -776,10 +774,10 @@
 					  (cdr pattern) body))))
 		     ((eq? (caar vars) 'values)
 		      ;; `(receive ,(cdar vars) ,(cadr vars)
-		      ;;	 ,(%alet-helper* parent
-		      ;;			 (append varlist
-		      ;;				 (pair->list (cdar vars)))
-		      ;;			 (cdr pattern) body)))
+		      ;; 	 ,(%alet-helper* parent
+		      ;; 			 (append varlist
+		      ;; 				 (pair->list (cdar vars)))
+		      ;; 			 (cdr pattern) body)))
 		      `(call-with-values (lambda () ,(cadr vars))
 			 (lambda ,(cdar vars)
 			   ,(%alet-helper* parent
@@ -848,8 +846,8 @@
 			     (var (cdr tmp)))
 			;; `(receive ,var ,(car tmp)
 			;;    ,(%alet-helper* parent
-			;;		   (append varlist var)
-			;;		   (cdr pattern) body))))
+			;; 		   (append varlist var)
+			;; 		   (cdr pattern) body))))
 			`(call-with-values (lambda () ,(car tmp))
 			   (lambda ,var
 			     ,(%alet-helper* parent
