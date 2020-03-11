@@ -144,39 +144,39 @@
     ((wow-key! z 2 (n k f) d)
      ;; two in a time: k1 1 k2 2 (k3 3) k4 4 k5 5 -> k2 2 k1 1 k4 4 k5 5
      (let ((x (car z))
-     	   (y (cdr z)))
+	   (y (cdr z)))
        (if (null? y)
-     	   d
-     	   (if (f k x)
-     	       (begin (set! z (cdr y)) (car y))
-     	       (let lp ((head (list x (car y))) (tail (cdr y)))
-     		 (if (null? tail)
-     		     d
-     		     (let ((x (car tail))
-     			   (y (cdr tail)))
-     		       (if (null? y)
-     			   d
-     			   (if (f k x)
-     			       (begin (set! z (append head (cdr y)))
-     				      (car y))
-     			       (lp (cons x (cons (car y) head)) (cdr y)))))))))))
+	   d
+	   (if (f k x)
+	       (begin (set! z (cdr y)) (car y))
+	       (let lp ((head (list x (car y))) (tail (cdr y)))
+		 (if (null? tail)
+		     d
+		     (let ((x (car tail))
+			   (y (cdr tail)))
+		       (if (null? y)
+			   d
+			   (if (f k x)
+			       (begin (set! z (append head (cdr y)))
+				      (car y))
+			       (lp (cons x (cons (car y) head)) (cdr y)))))))))))
     ((wow-key! z 1 (n k f) d)
      ;; one in a time: 1 2 3 4 (5 6) 7 8 -> 1 2 3 4 7 8
      (let ((x (car z))
-     	   (y (cdr z)))
+	   (y (cdr z)))
        (if (null? y)
-     	   d
-     	   (if (f k x)
-     	       (begin (set! z (cdr y)) (car y))
-     	       (let lp ((head (list x)) (tail y))
-     		 (let ((x (car tail))
-     		       (y (cdr tail)))
-     		   (if (null? y)
-     		       d
-     		       (if (f k x)
-     			   (begin (set! z (append (reverse head) (cdr y)))
-     				  (car y))
-     			   (lp (cons x head) y)))))))))
+	   d
+	   (if (f k x)
+	       (begin (set! z (cdr y)) (car y))
+	       (let lp ((head (list x)) (tail y))
+		 (let ((x (car tail))
+		       (y (cdr tail)))
+		   (if (null? y)
+		       d
+		       (if (f k x)
+			   (begin (set! z (append (reverse head) (cdr y)))
+				  (car y))
+			   (lp (cons x head) y)))))))))
     ((wow-key! z m (n k) d t)
      (wow-key! z m (n k eq?) d t n))
     ((wow-key! z m (n k f) d t)
@@ -190,45 +190,45 @@
     ((wow-key! z 2 (n k f) d t ts fs)
      ;; two in a time: k1 1 k2 2 (k3 3) k4 4 k5 5 -> k2 2 k1 1 k4 4 k5 5
      (let ((x (car z))
-     	   (y (cdr z)))
+	   (y (cdr z)))
        (if (null? y)
-     	   d
-     	   (if (f k x)
-     	       (let ((n (car y)))
-     		 (set! z (cdr y))
-     		 (if t ts fs))
-     	       (let lp ((head (list x (car y))) (tail (cdr y)))
-     		 (if (null? tail)
-     		     d
-     		     (let ((x (car tail))
-     			   (y (cdr tail)))
-     		       (if (null? y)
-     			   d
-     			   (if (f k x)
-     			       (let ((n (car y)))
-     				 (set! z (append head (cdr y)))
-     				 (if t ts fs))
-     			       (lp (cons x (cons (car y) head)) (cdr y)))))))))))
+	   d
+	   (if (f k x)
+	       (let ((n (car y)))
+		 (set! z (cdr y))
+		 (if t ts fs))
+	       (let lp ((head (list x (car y))) (tail (cdr y)))
+		 (if (null? tail)
+		     d
+		     (let ((x (car tail))
+			   (y (cdr tail)))
+		       (if (null? y)
+			   d
+			   (if (f k x)
+			       (let ((n (car y)))
+				 (set! z (append head (cdr y)))
+				 (if t ts fs))
+			       (lp (cons x (cons (car y) head)) (cdr y)))))))))))
     ((wow-key! z 1 (n k f) d t ts fs)
      ;; one in a time: 1 2 3 4 (5 6) 7 8 -> 1 2 3 4 7 8
      (let ((x (car z))
-     	   (y (cdr z)))
+	   (y (cdr z)))
        (if (null? y)
-     	   d
-     	   (if (f k x)
-     	       (let ((n (car y)))
-     		 (set! z (cdr y))
-     		 (if t ts fs))
-     	       (let lp ((head (list x)) (tail y))
-     		 (let ((x (car tail))
-     		       (y (cdr tail)))
-     		   (if (null? y)
-     		       d
-     		       (if (f k x)
-     			   (let ((n (car y)))
-     			     (set! z (append (reverse head) (cdr y)))
-     			     (if t ts fs))
-     			   (lp (cons x head) y)))))))))))
+	   d
+	   (if (f k x)
+	       (let ((n (car y)))
+		 (set! z (cdr y))
+		 (if t ts fs))
+	       (let lp ((head (list x)) (tail y))
+		 (let ((x (car tail))
+		       (y (cdr tail)))
+		   (if (null? y)
+		       d
+		       (if (f k x)
+			   (let ((n (car y)))
+			     (set! z (append (reverse head) (cdr y)))
+			     (if t ts fs))
+			   (lp (cons x head) y)))))))))))
 
 (define-syntax %alet
   (syntax-rules (adbmal values cons rec and opt quote quasiquote unquote)
@@ -311,7 +311,7 @@
     ;; ((%alet "rec" (p ...) (nv ...) ((n v t) ...) () (bn ...) bd ...)
     ;;  (let ((n '<undefined>) ...)
     ;;    (let ((t v) ...)
-    ;; 	 (%alet (p ...) (nv ...) (bn ...) bd ...))))
+    ;;	 (%alet (p ...) (nv ...) (bn ...) bd ...))))
 
     ;; ((%alet (p ...) (nv ...) ((rec (n1 v1) (n2 v2) ...) bn ...) bd ...)
     ;;  (let ((n1 '<undefined>) (n2 '<undefined>) ...)
@@ -408,7 +408,7 @@
     ((%alet (p ...) (nv ...) (a bn ...) bd ...)
      (%alet "rot" (p ...) (nv ...) () a (bn ...) bd ...))
     ((%alet "rot" (p ...) (nv ...) (new-bn ...) (a . b) (bn ...) bd ...)
-     (%alet "rot" (p ...) (nv ...) (new-bn ... a) b (bn ...) bd ...)) 
+     (%alet "rot" (p ...) (nv ...) (new-bn ... a) b (bn ...) bd ...))
     ((%alet "rot" (p ...) (nv ...) (new-bn ...) b (bn ...) bd ...)
      (%alet (b (p ...) (nv ...) (bn ...)) () (new-bn ...) bd ...))))
 
@@ -470,7 +470,7 @@
      ((lambda (r ...) (%alet* (p ...) (n ...) (bn ...) bd ...)) c d ...))
     ((%alet* "dot" (p ...) (n ...) (r ...) (b c d ...) (bn ...) bd ...)
      ((lambda (r ... . b) (%alet* (p ...) (n ... b) (bn ...) bd ...)) c d ...))
-    
+
     ((%alet* (p ...) (n ...) ((and (n1 v1 t1 ...) (n2 v2 t2 ...) ...) bn ...) bd ...)
      (alet-and* ((n1 v1 t1 ...) (n2 v2 t2 ...) ...)
 		(%alet* (p ...) (n ... n1 n2 ...) (bn ...) bd ...)))
@@ -570,7 +570,7 @@
     ((%alet* (p ...) (n ...) (a bn ...) bd ...)
      (%alet* "rot" (p ...) (n ...) () a (bn ...) bd ...))
     ((%alet* "rot" (p ...) (n ...) (new-bn ...) (a . b) (bn ...) bd ...)
-     (%alet* "rot" (p ...) (n ...) (new-bn ... a) b (bn ...) bd ...)) 
+     (%alet* "rot" (p ...) (n ...) (new-bn ... a) b (bn ...) bd ...))
     ((%alet* "rot" (p ...) (n ...) (new-bn ...) b (bn ...) bd ...)
      (%alet* (b (p ...) (n ...) (bn ...)) () (new-bn ...) bd ...))))
 
