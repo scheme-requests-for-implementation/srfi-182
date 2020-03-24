@@ -75,7 +75,7 @@ arguments, etc.</p>
   <li>The ALET* does NOT use LAMBDA*; that permits duplications of variables.</li>
   <li>The `rec' bindings of ALET* do not permit duplications of variables.</li>
   <li>An awkward form, <code>(() expression1 expression2 ...)</code>, is removed.</li>
-  <li>The `opt', `key', and `cat' forms are integrated into `opt'.</li></ol>
+  <li>The `opt', `key', and `cat' forms are integrated into one.</li></ol>
 
 <h1>Rationale</h1>
 
@@ -233,12 +233,12 @@ macros of SRFI 86.
   (list a b c d))
 =&gt; 1st2ndfalse#f
 
-(alet ((and (a (begin (display &quot;1st&quot;) 1))
-	    (b (begin (display &quot;2nd&quot;) 2) (&lt; b 2)) ; different from SRFI 2
-	    (c (begin (display &quot;false&quot;) #f))
-	    (d (begin (display &quot;3nd&quot;) 3))))
+(alet* ((and (a (begin (display &quot;1st&quot;) 1))
+	     (b (begin (display &quot;2nd&quot;) 2))
+	     (c (begin (display &quot;false&quot;) #f) (&lt; a b))	;different from SRFI-2
+	     (d (begin (display &quot;3rd&quot;) 3) (&lt; d a))))	;different from SRFI-2
   (list a b c d))
-=&gt; 1st2nd#f
+=&gt; 1st2ndfalse3rd#f
     </pre></li>
 
   <li><p>The LETREC and LETREC* forms are integrated into the ALET and ALET* with a
@@ -252,25 +252,43 @@ macros of SRFI 86.
     </pre></li>
 
   <li><p>The REST-VALUES of SRFI 51, SRFI 54 and the LET-KEYWORDS are integrated
-    into the ALET and ALET* with a syntactic keyword `opt'.</p>
+    into the ALET and ALET*.</p>
     <pre>
-((lambda n
-   (alet* ((opt n ('x 11) (('y 'yy) 22) (,z &quot;s&quot; (string? z)) (a 10) (b 20) . c))
-     (list x y z a b c)))
- 1 2 3 &quot;str&quot; 'yy 20 30 'x 10)
-=&gt; (11 20 &quot;str&quot; 3 1 (2 30 x 10))
+8-1. optional sequent arguments
 
-((lambda n
-   (alet* ((opt n (`x 11) ((`y 'yy) 22) (,z &quot;s&quot; (string? z)) (a 10) (b 20) . c))
-     (list x y z a b c)))
- 1 2 3 &quot;str&quot; 'yy 20 30 'x 10)
-=&gt; (10 20 &quot;str&quot; 1 2 (3 30))
+((lambda rest
+   (alet* ((() rest num cha str))
+     (list num cha str)))
+ 10)				=&gt; (10 #f #f)
 
-((lambda n
-   (alet* ((opt n ('x 11) (('y 'yy) 22) (,z &quot;s&quot; (string? z)) (a 10) (b 20) . c))
-     (list x y z a b c)))
- 'yy 20 'x 10 1 2 3 &quot;str&quot; 30)
-=&gt; (10 20 &quot;str&quot; 1 2 (3 30))
+((lambda rest
+   (alet* ((('undefined) rest num cha str))
+     (list num cha str)))
+ 10)				=&gt; (10 undefined undefined)
+
+((lambda rest
+   (alet* ((() rest (num 1) (cha #\a) (str &quot;s&quot;) . rem))
+     (list num cha str rem)))
+ 10)				=&gt; (10 #\a &quot;s&quot; ())
+
+8-2. optional keyword arguments
+
+((lambda rest
+   (alet (((#t) rest ('num 1) 'cha 'str))
+     (list num cha str)))
+ 'str &quot;s&quot; 'num 10)		=&gt; (10 #t &quot;s&quot;)
+
+((lambda rest
+   (alet ((() rest (('num num:) 1) (('cha cha:)) (('str str:))))
+     (list num cha str)))
+ str: &quot;s&quot; num: 10)		=&gt; (10 #f &quot;s&quot;)
+
+8-3. optional unnamed arguments
+
+((lambda rest
+   (alet ((() rest (,num 1 (number? num)) (,cha #\a (char? cha)) ,str))
+     (list num cha str)))
+ #\c 10)			=&gt; (10 #\c #f)
     </pre></li></ol>
 
 <h1>Specification</h1>
@@ -302,7 +320,7 @@ match the number of values expected by the binding specification.  Otherwise
   an error is signaled, as LAMBDA expression would.</p>
 
 <pre>
-syntax-rules identifier: adbmal values cons rec and opt
+syntax-rules identifier: adbmal values cons rec and quote quasiquote unquote
 </pre>
 
 <p>The variables of each &lt;binding spec&gt; are bound as follows:</p>
@@ -345,8 +363,8 @@ syntax-rules identifier: adbmal values cons rec and opt
   <li><pre>5-2. ((&lt;var1&gt; &lt;var2&gt; ... . &lt;varn&gt;) &lt;expr1&gt; &lt;expr2&gt; &lt;expr3&gt; ...)
 ((lambda (&lt;var1&gt; &lt;var2&gt; ... . &lt;varn&gt;) body) &lt;expr1&gt; &lt;expr2&gt; &lt;expr3&gt; ...)</pre></li>
 
-  <li><pre>6. (&lt;binding spec&gt; ... . &lt;var&gt;)		;iterative function
-   &lt;var&gt;				;iterative thunk
+  <li><pre>6. (&lt;binding spec&gt; ... . &lt;var&gt;)	;iterative function
+      &lt;var&gt;				;iterative thunk
 ((letrec ((var (lambda (&lt;variables of binding spec&gt; ...) body)))
    var) &lt;expressions of binding spec&gt; ...)</pre></li>
 
@@ -364,15 +382,17 @@ stops and returns #f.  When there is a &lt;test&gt;, the process is continued
 regardless of the value of &lt;expr&gt; unless the value of &lt;test&gt; is false.  If the
 value of &lt;test&gt; is false, it stops and returns #f.</p></li>
 
-  <li><pre>10. (opt &lt;rest list&gt; &lt;cl1&gt; &lt;cl2&gt; ... . &lt;rest var&gt;)
+  <li><pre>10. (&lt;optional delimeter&gt; &lt;rest list&gt; &lt;cl1&gt; &lt;cl2&gt; ... . &lt;rest var&gt;)
+&lt;optional delimeter&gt; --&gt; ()
+                       | (default)
 &lt;cl&gt; --&gt; &lt;vars&gt;
       | (&lt;vars&gt;  &lt;default&gt;  [&lt;test&gt;] [&lt;true substitute&gt;] [&lt;false substitute&gt;])
       | (&lt;vark&gt; [&lt;default&gt;] [&lt;test&gt;] [&lt;true substitute&gt;] [&lt;false substitute&gt;])
 
-&lt;vars&gt; --&gt;   &lt;var&gt;  	;( &lt;var&gt; #f) &lt;optional sequent variable&gt;
-       	  | ,&lt;var&gt;	;(,&lt;var&gt; #f) &lt;optional unnamed variable&gt;
-	  | '&lt;var&gt;	;('&lt;var&gt; #f) &lt;optional keyword variable&gt;: two in a time
-	  | `&lt;var&gt;	;(`&lt;var&gt; #f) &lt;optional keyword variable&gt;: one in a time
+&lt;vars&gt; --&gt;   &lt;var&gt;  	;&lt;optional sequent variable&gt;
+	  | '&lt;var&gt;	;&lt;optional keyword variable&gt;: two in a time
+	  | `&lt;var&gt;	;&lt;optional keyword variable&gt;: one in a time
+       	  | ,&lt;var&gt;	;&lt;optional unnamed variable&gt;
 
 &lt;vark&gt; --&gt; ('&lt;var&gt; &lt;keyword&gt; [&lt;equivalence predicate&gt;])
        	  |(`&lt;var&gt; &lt;keyword&gt; [&lt;equivalence predicate&gt;])
@@ -381,6 +401,9 @@ value of &lt;test&gt; is false, it stops and returns #f.</p></li>
 	     		  | eqv?
 			  | equal?
   </pre>
+  <p>There are two types of optional delimiter.  One is an empty list and the other
+    is a list with one element. The former has #f as the default value and the
+    latter has its element.</p>
   <p>The &lt;optional sequent variable&gt; is bound to the first one of the remaining
     elements of &lt;rest list&gt;.  If there are no more elements, it is bound to the
     &lt;default&gt;.</p>

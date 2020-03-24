@@ -88,7 +88,7 @@
      ,@(map (lambda (nv) `(set! ,(car nv) ,(cadr nv))) bindings)
      (begin ,@body)))
 
-(define-macro (lambda* args . body)
+(define-macro (*lambda* args . body)
   (cond
    ((pair? args)
     (let ((gen-args (pair->gensym-pair args)))
@@ -182,7 +182,7 @@
 	(tail (gensym)))
     (if (null? r)
 	(if (eqv? 2 m)
-	    ;; two in a time
+	    ;; two at a time
 	    `(let ((,x (car ,z))
 		   (,y (cdr ,z)))
 	       (if (null? ,y)
@@ -203,7 +203,7 @@
 					 (car ,y))
 				       (lp (cons (car ,y) (cons ,x ,head))
 					   (cdr ,y))))))))))
-	    ;; one in a time
+	    ;; one at a time
 	    `(let ((,x (car ,z))
 		   (,y (cdr ,z)))
 	       (if (null? ,y)
@@ -226,7 +226,7 @@
 		       `(error 'alet* "bad argument" ,n ',n ',t)
 		       (caddr r))))
 	  (if (eqv? 2 m)
-	      ;; two in a time
+	      ;; two at a time
 	      `(let ((,x (car ,z))
 		     (,y (cdr ,z)))
 		 (if (null? ,y)
@@ -249,7 +249,7 @@
 					   (if ,t ,ts ,fs))
 					 (lp (cons (car ,y) (cons ,x ,head))
 					     (cdr ,y))))))))))
-	      ;; one in a time
+	      ;; one at a time
 	      `(let ((,x (car ,z))
 		     (,y (cdr ,z)))
 		 (if (null? ,y)
@@ -269,7 +269,7 @@
 				       (if ,t ,ts ,fs))
 				     (lp (cons ,x ,head) ,y)))))))))))))
 
-(define (%opt-helper z clauses parent varlist pattern body)
+(define (%opt-helper f z clauses parent varlist pattern body)
   (cond
    ((symbol? clauses)
     (let ((t (gensym)))
@@ -284,30 +284,30 @@
     (let ((cl (car clauses)))
       (if (pair? cl)
 	  (let ((var (car cl))
-		(def (if (null? (cdr cl)) #f (cadr cl))))
+		(def (if (null? (cdr cl)) f (cadr cl))))
 	    (cond
 	     ((eq? 'unquote var)
 	      (let ((t (gensym)))
 		`(let ((,t (if (null? ,z)
-			       #f
-			       (wow-cat! ,z ,def #f))))
-		   ,(%opt-helper z (cdr clauses) parent
+			       ,f
+			       (wow-cat! ,z ,def ,f))))
+		   ,(%opt-helper f z (cdr clauses) parent
 				 (append varlist (list (list def t)))
 				 pattern body))))
 	     ((eq? 'quote var)
 	      (let ((t (gensym)))
 		`(let ((,t (if (null? ,z)
-			       #f
-			       (wow-key! ,z 2 (,def ,cl eq?) #f))))
-		   ,(%opt-helper z (cdr clauses) parent
+			       ,f
+			       (wow-key! ,z 2 (,def ,cl eq?) ,f))))
+		   ,(%opt-helper f z (cdr clauses) parent
 				 (append varlist (list (list def t)))
 				 pattern body))))
 	     ((eq? 'quasiquote var)
 	      (let ((t (gensym)))
 		`(let ((,t (if (null? ,z)
-			       #f
-			       (wow-key! ,z 1 (,def ,cl eq?) #f))))
-		   ,(%opt-helper z (cdr clauses) parent
+			       ,f
+			       (wow-key! ,z 1 (,def ,cl eq?) ,f))))
+		   ,(%opt-helper f z (cdr clauses) parent
 				 (append varlist (list (list def t)))
 				 pattern body))))
 	     ((and (symbol? var) (null? (cddr cl)))
@@ -317,7 +317,7 @@
 			       ,def
 			       (car ,z)))
 		       (,y (if (null? ,z) ,z (cdr ,z))))
-		   ,(%opt-helper y (cdr clauses) parent
+		   ,(%opt-helper f y (cdr clauses) parent
 				 (append varlist (list (list var t)))
 				 pattern body))))
 	     ((symbol? var)
@@ -327,7 +327,7 @@
 			       ,def
 			       (wow-opt ,var (car ,z) ,@(cddr cl))))
 		       (,y (if (null? ,z) ,z (cdr ,z))))
-		   ,(%opt-helper y (cdr clauses) parent
+		   ,(%opt-helper f y (cdr clauses) parent
 				 (append varlist (list (list var t)))
 				 pattern body))))
 	     ((and (eq? 'unquote (car var)) (null? (cdr clauses)))
@@ -343,25 +343,23 @@
 		`(let ((,t (if (null? ,z)
 			       ,def
 			       (wow-cat! ,z ,(cadr var) ,@(cdr cl)))))
-		   ,(%opt-helper z (cdr clauses) parent
+		   ,(%opt-helper f z (cdr clauses) parent
 				 (append varlist (list (list (cadr var) t)))
 				 pattern body))))
 	     ((eq? 'quote (car var))
 	      (let ((t (gensym)))
 		`(let ((,t (if (null? ,z)
 			       ,def
-			       (wow-key! ,z 2 (,(cadr var) ,var eq?)
-					 ,@(cdr cl)))))
-		   ,(%opt-helper z (cdr clauses) parent
+			       (wow-key! ,z 2 (,(cadr var) ,var eq?) ,@(cdr cl)))))
+		   ,(%opt-helper f z (cdr clauses) parent
 				 (append varlist (list (list (cadr var) t)))
 				 pattern body))))
 	     ((eq? 'quasiquote (car var))
 	      (let ((t (gensym)))
 		`(let ((,t (if (null? ,z)
 			       ,def
-			       (wow-key! ,z 1 (,(cadr var) ,var eq?)
-					 ,@(cdr cl)))))
-		   ,(%opt-helper z (cdr clauses) parent
+			       (wow-key! ,z 1 (,(cadr var) ,var eq?) ,@(cdr cl)))))
+		   ,(%opt-helper f z (cdr clauses) parent
 				 (append varlist (list (list (cadr var) t)))
 				 pattern body))))
 	     ((symbol? (car var))
@@ -371,7 +369,7 @@
 				(wow-key ,z ,(cadr var) ,def)))
 			(,t (car ,z))
 			(,z (cdr ,z)))
-		   ,(%opt-helper z (cdr clauses) parent
+		   ,(%opt-helper f z (cdr clauses) parent
 				 (append varlist (list (list (car var) t)))
 				 pattern body))))
 	     (else
@@ -384,21 +382,21 @@
 		  `(let ((,t (if (null? ,z)
 				 ,def
 				 (wow-key! ,z 2 (,naked-v ,@(cdr var)) ,@cdrcl))))
-		     ,(%opt-helper z (cdr clauses) parent
+		     ,(%opt-helper f z (cdr clauses) parent
 				   (append varlist (list (list naked-v t)))
 				   pattern body)))
 		 ((eq? 'quasiquote quote-s)
 		  `(let ((,t (if (null? ,z)
 				 ,def
 				 (wow-key! ,z 1 (,naked-v ,@(cdr var)) ,@cdrcl))))
-		     ,(%opt-helper z (cdr clauses) parent
+		     ,(%opt-helper f z (cdr clauses) parent
 				   (append varlist (list (list naked-v t)))
 				   pattern body))))))))
 	  (let ((y (gensym))
 		(t (gensym)))
-	    `(let ((,t (if (null? ,z) #f (cdr ,z)))
+	    `(let ((,t (if (null? ,z) ,f (car ,z)))
 		   (,y (if (null? ,z) ,z (cdr ,z))))
-	       ,(%opt-helper y (cdr clauses) parent
+	       ,(%opt-helper f y (cdr clauses) parent
 			     (append varlist (list (list cl t)))
 			     pattern body))))))))
 
@@ -482,15 +480,20 @@
 							(pair->list gen-args)))
 					   (cdr pattern) body))
 			  ,(cadr vars)))))
-		    (let ((gen-args (pair->gensym-pair (car vars))))
-		      `((lambda ,gen-args
-			  ,(%alet-helper parent
-					 (append varlist
-						 (map (lambda (v g) `(,v ,g))
-						      (pair->list (car vars))
-						      (pair->list gen-args)))
-					 (cdr pattern) body))
-			,@(cdr vars))))
+		    (if (null? (cdar vars))
+			(let ((y (gensym)))
+			  `(let ((,y ,(cadr vars)))
+			     ,(%opt-helper (caar vars) y (cddr vars)
+					   parent varlist (cdr pattern) body)))
+			(let ((gen-args (pair->gensym-pair (car vars))))
+			  `((lambda ,gen-args
+			      ,(%alet-helper parent
+					     (append varlist
+						     (map (lambda (v g) `(,v ,g))
+							  (pair->list (car vars))
+							  (pair->list gen-args)))
+					     (cdr pattern) body))
+			    ,@(cdr vars)))))
 		(if (null? (cdr vars))
 		    (let ((t (gensym)))
 		      `(call-with-current-continuation
@@ -500,6 +503,11 @@
 						 (list (list (car vars) t)))
 					 (cdr pattern) body))))
 		    (cond
+		     ((null? (car vars))
+		      (let ((y (gensym)))
+			`(let ((,y ,(cadr vars)))
+			   ,(%opt-helper #f y (cddr vars)
+					 parent varlist (cdr pattern) body))))
 		     ((eq? (car vars) 'and)
 		      (let* ((vlist (map car (cdr vars)))
 			     (glist (pair->gensym-pair vlist)))
@@ -546,11 +554,6 @@
 						   (list (list (car vars) t)))
 					   (cdr pattern) body))
 			  ,(cadr vars))))
-		     ((eq? (car vars) 'opt)
-		      (let ((y (gensym)))
-			`(let ((,y ,(cadr vars)))
-			   ,(%opt-helper y (cddr vars)
-					 parent varlist (cdr pattern) body))))
 		     ((eq? (car vars) 'adbmal)
 		      (let* ((tmp (split-at-last (cdr vars)))
 			     (var (cdr tmp))
@@ -603,24 +606,31 @@
 							      var gen))
 						 (cdr pattern) body))
 				,(car tmp)))))))
-	    (if (symbol? vars)
-		(%alet-helper (list vars parent varlist (cdr pattern))
-			      '() '() body)
-		(if (and (eq? (car vars) 'opt) (pair? (cdr vars)))
-		    (let ((y (gensym)))
-		      `(let ((,y ,(cadr vars)))
-			 ,(%opt-helper y (cddr vars)
-				       parent varlist (cdr pattern) body)))
-		    (let ((tmp (split-at-dot vars)))
-		      (%alet-helper (list (car tmp) parent varlist (cdr pattern))
-				    '() (cdr tmp) body))))))))
+	    (cond
+	     ((symbol? vars)
+	      (%alet-helper (list vars parent varlist (cdr pattern))
+			    '() '() body))
+	     ((and (null? (car vars)) (pair? (cdr vars)))
+	      (let ((y (gensym)))
+		`(let ((,y ,(cadr vars)))
+		   ,(%opt-helper #f y (cddr vars)
+				 parent varlist (cdr pattern) body))))
+	     ((and (pair? (car vars)) (null? (cdar vars)) (pair? (cdr vars)))
+	      (let ((y (gensym)))
+		`(let ((,y ,(cadr vars)))
+		   ,(%opt-helper (caar vars) y (cddr vars)
+				 parent varlist (cdr pattern) body))))
+	     (else
+	      (let ((tmp (split-at-dot vars)))
+		(%alet-helper (list (car tmp) parent varlist (cdr pattern))
+			      '() (cdr tmp) body))))))))
 
 (define-macro (alet pattern . body)
   (if (symbol? pattern)
       (%alet-helper (list pattern) '() (car body) (cdr body))
       (%alet-helper '() '() pattern body)))
 
-(define (%opt-helper* z clauses parent varlist pattern body)
+(define (%opt-helper* f z clauses parent varlist pattern body)
   (cond
    ((symbol? clauses)
     `(let ((,clauses ,z))
@@ -633,27 +643,27 @@
     (let ((cl (car clauses)))
       (if (pair? cl)
 	  (let ((var (car cl))
-		(def (if (null? (cdr cl)) #f (cadr cl))))
+		(def (if (null? (cdr cl)) f (cadr cl))))
 	    (cond
 	     ((eq? 'unquote var)
 	      `(let ((,def (if (null? ,z)
-			       #f
-			       (wow-cat! ,z ,def #f))))
-		 ,(%opt-helper* z (cdr clauses) parent
+			       ,f
+			       (wow-cat! ,z ,def ,f))))
+		 ,(%opt-helper* f z (cdr clauses) parent
 				(append varlist (list def))
 				pattern body)))
 	     ((eq? 'quote var)
 	      `(let ((,def (if (null? ,z)
-			       #f
-			       (wow-key! ,z 2 (,def ,cl eq?) #f))))
-		 ,(%opt-helper* z (cdr clauses) parent
+			       ,f
+			       (wow-key! ,z 2 (,def ,cl eq?) ,f))))
+		 ,(%opt-helper* f z (cdr clauses) parent
 				(append varlist (list def))
 				pattern body)))
 	     ((eq? 'quasiquote var)
 	      `(let ((,def (if (null? ,z)
-			       #f
-			       (wow-key! ,z 1 (,def ,cl eq?) #f))))
-		 ,(%opt-helper* z (cdr clauses) parent
+			       ,f
+			       (wow-key! ,z 1 (,def ,cl eq?) ,f))))
+		 ,(%opt-helper* f z (cdr clauses) parent
 				(append varlist (list def))
 				pattern body)))
 	     ((and (symbol? var) (null? (cddr cl)))
@@ -662,7 +672,7 @@
 				 ,def
 				 (car ,z)))
 		       (,y (if (null? ,z) ,z (cdr ,z))))
-		   ,(%opt-helper* y (cdr clauses) parent
+		   ,(%opt-helper* f y (cdr clauses) parent
 				  (append varlist (list var))
 				  pattern body))))
 	     ((symbol? var)
@@ -671,7 +681,7 @@
 				 ,def
 				 (wow-opt ,var (car ,z) ,@(cddr cl))))
 		       (,y (if (null? ,z) ,z (cdr ,z))))
-		   ,(%opt-helper* y (cdr clauses) parent
+		   ,(%opt-helper* f y (cdr clauses) parent
 				  (append varlist (list var))
 				  pattern body))))
 	     ((and (eq? 'unquote (car var)) (null? (cdr clauses)))
@@ -684,7 +694,7 @@
 	      `(let ((,(cadr var) (if (null? ,z)
 				      ,def
 				      (wow-cat! ,z ,(cadr var) ,@(cdr cl)))))
-		 ,(%opt-helper* z (cdr clauses) parent
+		 ,(%opt-helper* f z (cdr clauses) parent
 				(append varlist (list (cadr var)))
 				pattern body)))
 	     ((eq? 'quote (car var))
@@ -692,7 +702,7 @@
 				      ,def
 				      (wow-key! ,z 2 (,(cadr var) ,var eq?)
 						,@(cdr cl)))))
-		 ,(%opt-helper* z (cdr clauses) parent
+		 ,(%opt-helper* f z (cdr clauses) parent
 				(append varlist (list (cadr var)))
 				pattern body)))
 	     ((eq? 'quasiquote (car var))
@@ -700,7 +710,7 @@
 				      ,def
 				      (wow-key! ,z 1 (,(cadr var) ,var eq?)
 						,@(cdr cl)))))
-		 ,(%opt-helper* z (cdr clauses) parent
+		 ,(%opt-helper* f z (cdr clauses) parent
 				(append varlist (list (cadr var)))
 				pattern body)))
 	     ((symbol? (car var))
@@ -709,7 +719,7 @@
 			      (wow-key ,z ,(cadr var) ,def)))
 		      (,(car var) (car ,z))
 		      (,z (cdr ,z)))
-		 ,(%opt-helper* z (cdr clauses) parent
+		 ,(%opt-helper* f z (cdr clauses) parent
 				(append varlist (list (car var)))
 				pattern body)))
 	     (else
@@ -721,20 +731,20 @@
 		  `(let ((,naked-v (if (null? ,z)
 				       ,def
 				       (wow-key! ,z 2 (,naked-v ,@(cdr var)) ,@cdrcl))))
-		     ,(%opt-helper* z (cdr clauses) parent
+		     ,(%opt-helper* f z (cdr clauses) parent
 				    (append varlist (list naked-v))
 				    pattern body)))
 		 ((eq? 'quasiquote quote-s)
 		  `(let ((,naked-v (if (null? ,z)
 				       ,def
 				       (wow-key! ,z 1 (,naked-v ,@(cdr var)) ,@cdrcl))))
-		     ,(%opt-helper* z (cdr clauses) parent
+		     ,(%opt-helper* f z (cdr clauses) parent
 				    (append varlist (list naked-v))
 				    pattern body))))))))
 	  (let ((y (gensym)))
-	    `(let ((,cl (if (null? ,z) #f (car ,z)))
+	    `(let ((,cl (if (null? ,z) ,f (car ,z)))
 		   (,y (if (null? ,z) ,z (cdr ,z))))
-	       ,(%opt-helper* y (cdr clauses) parent
+	       ,(%opt-helper* f y (cdr clauses) parent
 			      (append varlist (list cl))
 			      pattern body))))))))
 
@@ -743,7 +753,7 @@
       (cond
        ((null? parent) `((lambda () ,@body)))
        ((null? (cdr parent))
-	`((letrec ((,(car parent) (lambda* ,varlist ,@body))) ;for duplication
+	`((letrec ((,(car parent) (*lambda* ,varlist ,@body))) ;for duplication
 	    ,(car parent)) ,@varlist))
        (else
 	`((letrec ((,(car parent)
@@ -799,11 +809,16 @@
 							(pair->list (car vars)))
 						(cdr pattern) body))
 			      ,(cadr vars))))
-		    `((lambda ,(car vars)
-			,(%alet-helper* parent
-					(append varlist (pair->list (car vars)))
-					(cdr pattern) body))
-		      ,@(cdr vars)))
+		    (if (null? (cdar vars))
+			(let ((y (gensym)))
+			  `(let ((,y ,(cadr vars)))
+			     ,(%opt-helper* (caar vars) y (cddr vars)
+					    parent varlist (cdr pattern) body)))
+			`((lambda ,(car vars)
+			    ,(%alet-helper* parent
+					    (append varlist (pair->list (car vars)))
+					    (cdr pattern) body))
+			  ,@(cdr vars))))
 		(if (null? (cdr vars))
 		    `(call-with-current-continuation
 		      (lambda (,(car vars))
@@ -811,6 +826,11 @@
 					(append varlist vars)
 					(cdr pattern) body)))
 		    (cond
+		     ((null? (car vars))
+		      (let ((y (gensym)))
+			`(let ((,y ,(cadr vars)))
+			   ,(%opt-helper* #f y (cddr vars)
+					  parent varlist (cdr pattern) body))))
 		     ((eq? (car vars) 'and)
 		      `(alet-and* ,(cdr vars)
 				  ,(%alet-helper* parent
@@ -829,11 +849,6 @@
 					  (append varlist (list (car vars)))
 					  (cdr pattern) body))
 			,(cadr vars)))
-		     ((eq? (car vars) 'opt)
-		      (let ((y (gensym)))
-			`(let ((,y ,(cadr vars)))
-			   ,(%opt-helper* y (cddr vars)
-					  parent varlist (cdr pattern) body))))
 		     ((eq? (car vars) 'adbmal)
 		      (let* ((tmp (split-at-last (cdr vars)))
 			     (var (cdr tmp)))
@@ -871,17 +886,24 @@
 						  (append varlist var)
 						  (cdr pattern) body))
 				,(car tmp)))))))
-	    (if (symbol? vars)
-		(%alet-helper* (list vars parent varlist (cdr pattern))
-			       '() '() body)
-		(if (and (eq? (car vars) 'opt) (pair? (cdr vars)))
-		    (let ((y (gensym)))
-		      `(let ((,y ,(cadr vars)))
-			 ,(%opt-helper* y (cddr vars)
-					parent varlist (cdr pattern) body)))
-		    (let ((tmp (split-at-dot vars)))
-		      (%alet-helper* (list (car tmp) parent varlist (cdr pattern))
-				     '() (cdr tmp) body))))))))
+	    (cond
+	     ((symbol? vars)
+	      (%alet-helper* (list vars parent varlist (cdr pattern))
+			     '() '() body))
+	     ((and (null? (car vars)) (pair? (cdr vars)))
+	      (let ((y (gensym)))
+		`(let ((,y ,(cadr vars)))
+		   ,(%opt-helper* #f y (cddr vars)
+				  parent varlist (cdr pattern) body))))
+	     ((and (pair? (car vars)) (null? (cdar vars)) (pair? (cdr vars)))
+	      (let ((y (gensym)))
+		`(let ((,y ,(cadr vars)))
+		   ,(%opt-helper* (caar vars) y (cddr vars)
+				  parent varlist (cdr pattern) body))))
+	     (else
+	      (let ((tmp (split-at-dot vars)))
+		(%alet-helper* (list (car tmp) parent varlist (cdr pattern))
+			       '() (cdr tmp) body))))))))
 
 (define-macro (alet* pattern . body)
   (if (symbol? pattern)
