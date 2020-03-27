@@ -6,7 +6,7 @@
 
 This repository hosts [[https://srfi.schemers.org/srfi-182/][SRFI 182]]: ADBMAL, ALET, and ALET*, a [[https://srfi.schemers.org/][Scheme Request for Implementation]].
 
-This SRFI is in /draft/ status.
+This SRFI is in /withdrawn/ status.
 
 See also [[https://srfi.schemers.org/srfi-2/][SRFI 2: AND-LET*: an AND with local bindings, a guarded LET* special form]], [[https://srfi.schemers.org/srfi-11/][SRFI 11: Syntax for receiving multiple values]], [[https://srfi.schemers.org/srfi-51/][SRFI 51: Handling rest list]], [[https://srfi.schemers.org/srfi-54/][SRFI 54: Formatting]], [[https://srfi.schemers.org/srfi-71/][SRFI 71: Extended LET-syntax for multiple values]], and [[https://srfi.schemers.org/srfi-86/][SRFI 86: MU and NU simulating VALUES & CALL-WITH-VALUES, and their related LET-syntax]].
 
